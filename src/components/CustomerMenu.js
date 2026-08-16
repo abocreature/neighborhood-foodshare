@@ -1,75 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { supabase } from '../services/supabase'
 
-// Hardcoded sample data matching your Supabase 'menu_items' schema
-const MOCK_MENU = [
-  { id: 1, delivery_date: 'Mon, Aug 3', dish_name: 'Garlic Herb Roasted Chicken', description: 'Served with mashed potatoes and green beans.' },
-  { id: 2, delivery_date: 'Wed, Aug 5', dish_name: 'Classic Meatloaf', description: 'With honey-glazed carrots and a side of mac & cheese.' },
-  { id: 3, delivery_date: 'Fri, Aug 7', dish_name: 'Baked Ziti', description: 'Layered with rich marinara, ricotta, and melted mozzarella.' }
-];
+export default function CustomerMenu() {
+  const [meals, setMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-function CustomerMenu() {
-  // Local state to track which items the customer has clicked
-  const [claimedItems, setClaimedItems] = useState([]);
+  useEffect(() => {
+    async function fetchMeals() {
+      try {
+        const { data, error } = await supabase
+          .from('meals')
+          .select('*')
+          .order('serving_date', { ascending: true });
 
-  const handleClaim = (itemId) => {
-    // For now, toggle the item in local UI state to see it work
-    if (claimedItems.includes(itemId)) {
-      setClaimedItems(claimedItems.filter(id => id !== itemId));
-    } else {
-      setClaimedItems([...claimedItems, itemId]);
+        if (error) throw error;
+        setMeals(data || []);
+      } catch (err) {
+        console.error('Error fetching meals: ', err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+
+    fetchMeals();
+  }, []);
+
+  if (loading) return <ActivityIndicator size="large" style={styles.centered} />;
 
   return (
-    <div>
-      <h2 style={{ color: '#333' }}>Upcoming Weekly Menu</h2>
-      <p style={{ color: '#666', marginBottom: '20px' }}>Select the days you would like to claim your dinner delivery:</p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {MOCK_MENU.map((item) => {
-          const isClaimed = claimedItems.includes(item.id);
-          
-          return (
-            <div 
-              key={item.id} 
-              style={{
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                padding: '15px',
-                backgroundColor: isClaimed ? '#e6f4ea' : '#fff',
-                borderColor: isClaimed ? '#34a853' : '#ddd',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 'bold' }}>{item.delivery_date}</span>
-                  <h3 style={{ margin: '5px 0', color: '#222' }}>{item.dish_name}</h3>
-                  <p style={{ margin: 0, color: '#555', fontSize: '0.95rem' }}>{item.description}</p>
-                </div>
+    <View style={styles.container}>
+      <Text style={styles.header}>Upcoming Menu</Text>
+      <FlatList
+        data={meals}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.date}>{new Date(item.serving_date).toLocaleDateString()}</Text>
+            <Text style={styles.dishName}>{item.dish_name}</Text>
+            <Text style={styles.description}>{item.description}</Text>
+            <Text style={styles.portions}>Portions Left: {item.total_portions}</Text>
                 
-                <button
-                  onClick={() => handleClaim(item.id)}
-                  style={{
-                    padding: '10px 15px',
-                    borderRadius: '5px',
-                    border: '1px solid',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    backgroundColor: isClaimed ? '#34a853' : '#fff',
-                    color: isClaimed ? '#fff' : '#333',
-                    borderColor: isClaimed ? '#34a853' : '#ccc'
-                  }}
-                >
-                  {isClaimed ? '✓ Claimed' : 'Claim Meal'}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            <TouchableOpacity style={styles.button}>
+              <Text style={styles.buttonText}>Claim Dinner</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+    </View>
   );
 }
 
-export default CustomerMenu;
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 15 },
+  header: { fontSize: 22, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+  card: { padding: 15, backgroundColor: '#f9f9f9', borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#eee' },
+  date: { fontSize: 12, fontWeight: 'bold', color: '#0066cc' },
+  dishName: { fontSize: 18, fontWeight: 'bold', marginVertical: 4 },
+  description: { fontSize: 14, color: '#666', marginBottom: 8 },
+  portions: { fontSize: 13, color: '#888', marginBottom: 10 },
+  button: { backgroundColor: '#0066cc', padding: 10, borderRadius: 5, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
+  centered: { flex: 1, justifyContent: 'center' }
+});

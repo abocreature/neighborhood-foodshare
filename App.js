@@ -7,37 +7,31 @@ import { supabase } from './src/services/supabase';
 export default function App() {
   // Options: 'customer' or 'admin'
   const [currentView, setCurrentView] = useState('customer');
-  const [loading, setLoading] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState ('Testing database connection...');
-
-  useEffect(() => {
-    async function testConnection() {
-      try {
-        // Run a simple query to fetch just 1 row from your meals table
-        const { data, error } = await supabase.from('meals').select('*').limit(1);
-        
-        if (error) throw error;
-        
-        setConnectionStatus('Success! Connected securely to Supabase.');
-      } catch (err) {
-        setConnectionStatus(`Connection Error: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    testConnection();
-  }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Neighborhood Foodshare</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0066cc" />
-      ) : (
-        <Text style={styles.statusText}>{connectionStatus}</Text>
-      )}
-    </View>
+    <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
+      {/* Global Navigation Bar */}
+      <nav style={{ marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #ccc' }}>
+        <button 
+          onClick={() => setCurrentView('customer')}
+          style={{ marginRight: '10px', fontWeight: currentView === 'customer' ? 'bold' : 'normal' }}
+        >
+          Weekly Menu
+        </button>
+        <button 
+          onClick={() => setCurrentView('admin')}
+          style={{ fontWeight: currentView === 'admin' ? 'bold' : 'normal' }}
+        >
+          Admin Dashboard
+        </button>
+      </nav>
+
+      {/* Conditional Rendering Logic */}
+      <main>
+        {currentView === 'customer' && <CustomerMenu />}
+        {currentView === 'admin' && <AdminDashboard />}
+      </main>
+    </div>
   );
 }
 
