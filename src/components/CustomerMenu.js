@@ -16,12 +16,13 @@ export default function CustomerMenu({ user }) {
   const [meals, setMeals] = useState([]);
   const [profileName, setProfileName] = useState('Neighbor');
   const [loading, setLoading] = useState(true);
-  const [claimingID, setClaimingID] = useState(null);
-  const [selectedPortions, setSelectedPortions] = useState({});
+  const [processingID, setProcessingID] = useState(null);
+  const [activeClaims, setActiveClaims] = useState({});
 
   useEffect(() => {
-    async function fetchMeals() {
+    async function loadData() {
       try {
+        // Fetching profile data
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('full_name')
@@ -31,20 +32,32 @@ export default function CustomerMenu({ user }) {
         if (profileError) throw profileError; 
         if (profileData) setProfileName(profileData.full_name);
 
+        // Fetching upcoming meals
         const { data: mealData, error: mealError } = await supabase
           .from('meals')
           .select('*')
-          .order('serving_date', { ascending: true });
+          .order('serving_date', { ascending: false });
 
         if (mealError) throw mealError;
-        setMeals(mealData || []);
 
-        const initialPortions = {};
-        (mealData || []).forEach(meal => {
-          initialPortions[meal.id] = 1;
+        // Fetch existing orders
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('id, meal_id, portions_requested, status')
+          .eq('neighbor_id', user.id)
+          .eq('status', 'pending');
+        if (orderError) throw orderError;
+
+        const claimsMap = {};
+        (orderData || []).forEach(order => {
+          claimsMap[order.meal_id] = {
+            orderID: order.id,
+            portions: order.portions_requested
+          };
         });
-        setSelectedPortions(initialPortions);
-
+        
+        setMeals(mealData || []);
+        setActiveClaims(claimsMap);
       } catch (err) {
         console.error('Data loading error: ', err.message);
       } finally {
@@ -52,41 +65,88 @@ export default function CustomerMenu({ user }) {
       }
     }
 
-    fetchMeals();
+    loadData();
   }, [user]);
 
-  const handlePortionChange = (mealID, value) => {
-    const parsed = parseInt(value, 10);
-    const count = isNaN(parsed) || parsed < 1 ? 1 : parsed;
-    setSelectedPortions({
-      ...selectedPortions,
-      [mealID]: count
-    });
-  };
+  const handleInitialClaim = async (mealID) => {
+    if (processingID) return;
+    setProcessingID(mealID);
 
-  const handleClaimMeal = async (mealID) => {
-    setClaimingID(mealID);
     try {
       const { data, error } = await supabase
         .from('orders')
-        .insert([
-          {
-            meal_id: mealID,
-            neighbor_id: user.id,
-            portions_requested: 1,
-            status: 'pending'
-          }
-        ]);
+        .insert([{
+          meal_id: mealID,
+          neighbor_id: user.id,
+          portions_requested: 1,
+          status: 'pending'
+        }])
+        .select('id')
+        .single();
 
         if (error) throw error;
 
-        const alertMsg = "Your dinner choice has been logged!";
-        showAlert("Success", alertMsg);
+        setActiveClaims(prev => ({
+          ...prev,
+          [mealID]: { orderID: data.id, portions: 1 }
+        }));
     } catch (err) {
-      console.error('Error creating order:', err.message);
+      console.error('Initial claim transaction failed:', err.message);
     } finally {
-      setClaimingID(null);
+      setProcessingID(null);
     }
+  };
+
+  const handleUpdatePortions = async (mealID, currentOrderID, newAmount) => {
+    if (newAmount < 1 || processingID) return;
+    setProcessingID(mealID);
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ portions_requested: newAmount })
+        .eq('id', currentOrderID);
+
+      if (error) throw error;
+
+      setActiveClaims(prev => ({
+        ...prev,
+        [mealID]: { ...prev[mealID], portions: newAmount }
+      }));
+    } catch (err) {
+      console.error('Portion adjustment failed:', err.message);
+    } finally {
+      setProcessingID(null);
+    }
+  };
+
+  const handleCancelClaim = async (mealID, currentOrderID) => {
+    if (processingID) return;
+    setProcessingID(mealID);
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', currentOrderID);
+
+      if (error) throw error;
+
+      setActiveClaims(prev => {
+        const updated = { ...prev };
+        delete updated[mealID];
+        return updated;
+      });
+    } catch (err) {
+      console.error('Order cancellation failed:', err.message);
+    } finally {
+      setProcessingID(null);
+    }
+  };
+
+  const formatCardDate = (dateString) => {
+    const options = { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
   if (loading) return <ActivityIndicator size="large" style={styles.centered} />;
@@ -94,61 +154,98 @@ export default function CustomerMenu({ user }) {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back, {profileName}!</Text>
-      <Text style={styles.subHeader}>Select how many dinner portions you would like to claim:</Text>
-      
+      <Text style={styles.subHeader}>Tap any dinner menu card to claim your portion delivery:</Text>
+
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardContent}>
-              <Text style={styles.date}>{new Date(item.serving_date).toLocaleDateString()}</Text>
+        renderItem={({ item }) => {
+          const claim = activeClaims[item.id];
+          const isClaimed = !!claim;
+
+          return (
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              style={[styles.card, isClaimed && styles.claimedCard]}
+              onPress={() => !isClaimed && handleInitialClaim(item.id)}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={[styles.dateText, isClaimed && styles.claimedDateText]}>
+                  {formatCardDate(item.serving_date)}
+                </Text>
+                {isClaimed && (
+                  <TouchableOpacity 
+                    style={styles.cancelX} 
+                    onPress={() => handleCancelClaim(item.id, claim.orderID)}
+                  >
+                    <Text style={styles.cancelXText}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
               <Text style={styles.dishName}>{item.dish_name}</Text>
               <Text style={styles.description}>{item.description}</Text>
-              <Text style={styles.portionsText}>Available Batch Portions: {item.total_portions}</Text>
-            </View>
 
-            {/* Quantity Selector Layer Row */}
-            <View style={styles.quantityRow}>
-              <Text style={styles.label}>Portions Needed:</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={String(selectedPortions[item.id] || 1)}
-                onChangeText={(val) => handlePortionChange(item.id, val)}
-              />
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={() => handleClaimMeal(item.id)}
-              disabled={claimingID === item.id}
-            >
-              <Text style={styles.buttonText}>
-                {claimingID === item.id ? 'Processing...' : `Claim ${selectedPortions[item.id] || 1} Dinner(s)`}
-              </Text>
+              {/* Dynamic Overlay Layout: Pops up only inside claimed items */}
+              {isClaimed && (
+                <View style={styles.portionsOverlay} onStartShouldSetResponder={() => true}>
+                  <Text style={styles.portionsLabel}>Your Order:</Text>
+                  <View style={styles.counterRow}>
+                    <TouchableOpacity 
+                      style={styles.arrowButton} 
+                      onPress={() => handleUpdatePortions(item.id, claim.orderID, claim.portions - 1)}
+                      disabled={claim.portions <= 1}
+                    >
+                      <Text style={[styles.arrowText, claim.portions <= 1 && styles.disabledText]}>−</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.portionCount}>{claim.portions}</Text>
+
+                    <TouchableOpacity 
+                      style={styles.arrowButton} 
+                      onPress={() => handleUpdatePortions(item.id, claim.orderID, claim.portions + 1)}
+                    >
+                      <Text style={styles.arrowText}>+</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.unitText}>Dinner(s) Secured</Text>
+                  </View>
+                </View>
+              )}
             </TouchableOpacity>
-          </View>
-        )}
+          );
+        }}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15 },
-  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#222' },
-  subHeader: { fontSize: 14, color: '#666', marginBottom: 20, marginTop: 4 },
-  card: { padding: 15, backgroundColor: '#f9f9f9', borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#eee' },
-  cardContent: { marginBottom: 10 },
-  date: { fontSize: 12, fontWeight: 'bold', color: '#0066cc' },
-  dishName: { fontSize: 18, fontWeight: 'bold', marginVertical: 4 },
-  description: { fontSize: 14, color: '#555', marginBottom: 6 },
-  portionsText: { fontSize: 12, color: '#888', fontWeight: '500' },
-  quantityRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, marginTop: 5 },
-  label: { fontSize: 14, fontWeight: 'bold', color: '#444', marginRight: 10 },
-  input: { borderBottomWidth: 1, borderColor: '#ccc', width: 45, textAlign: 'center', fontSize: 16, paddingVertical: 2, fontWeight: 'bold' },
-  button: { backgroundColor: '#34a853', padding: 12, borderRadius: 6, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-  centered: { flex: 1, justifyContent: 'center' }
+  container: { flex: 1, padding: 15, backgroundColor: '#fff', alignItems: 'center' },
+  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
+  subHeader: { fontSize: 14, color: '#666', marginBottom: 15, marginTop: 4, textAlign: 'center' },
+  centered: { flex: 1, justifyContent: 'center' },
+  
+  // Basic Card Styling
+  card: { padding: 18, backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1, maxWidth: 600 },
+  claimedCard: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
+  
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dateText: { fontSize: 13, fontWeight: '700', color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' },
+  claimedDateText: { color: '#16a34a' },
+  
+  dishName: { fontSize: 19, fontWeight: 'bold', color: '#1e293b', marginVertical: 6, textAlign: 'center' },
+  description: { fontSize: 14, color: '#64748b', marginBottom: 12, lineHeight: 20, textAlign: 'center' },
+  
+  // Custom Controls Overlay
+  portionsOverlay: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#dcfce7', flexDirection: 'column', alignItems: 'center' },
+  portionsLabel: { fontSize: 12, fontWeight: 'bold', color: '#15803d', textTransform: 'uppercase', marginBottom: 6 },
+  counterRow: { flexDirection: 'row', alignItems: 'center', textAlign: 'center' },
+  arrowButton: { width: 36, height: 36, backgroundColor: '#fff', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  arrowText: { fontSize: 18, fontWeight: 'bold', color: '#16a34a' },
+  portionCount: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginHorizontal: 15, minWidth: 20, textAlign: 'center' },
+  unitText: { fontSize: 14, color: '#16a34a', fontWeight: '500', marginLeft: 10 },
+  disabledText: { color: '#cbd5e1' },
+  
+  cancelX: { position: 'absolute', right: -50, width: 28, height: 28, backgroundColor: '#fee2e2', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cancelXText: { fontSize: 12, fontWeight: 'bold', color: '#ef4444' }
 });
