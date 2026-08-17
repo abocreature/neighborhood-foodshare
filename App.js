@@ -34,7 +34,7 @@ export default function App() {
         <Button title="Admin" onPress={() => setCurrentView('admin')} />
         <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="red" />
       </View>
-      {currentView === 'customer' ? <CustomerMenu /> : <AdminDashboard />}
+      {currentView === 'customer' ? <CustomerMenu user={sessionUser} /> : <AdminDashboard />}
     </View>
   );
 }

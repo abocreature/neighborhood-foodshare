@@ -38,6 +38,8 @@ export default function AdminDashboard() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Dad's Delivery Manifest</Text>
+      <Text style={styles.subHeader}>Real-time routing list and meal compilation tracking.</Text>
+      
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id.toString()}
@@ -45,10 +47,16 @@ export default function AdminDashboard() {
           <View style={styles.manifestCard}>
             <View style={styles.row}>
               <Text style={styles.boldText}>{item.meals?.dish_name || 'Unknown Meal'}</Text>
-              <Text style={styles.statusBadge}>{item.status}</Text>
+              <Text style={[
+                styles.statusBadge, 
+                { backgroundColor: item.status === 'confirmed' ? '#e6f4ea' : '#fff3e0',
+                  color: item.status === 'confirmed' ? '#137333' : '#b06000' }
+              ]}>
+                {item.status?.toUpperCase()}
+              </Text>
             </View>
-            <Text style={styles.detailsText}>Customer: {item.profiles?.full_name}</Text>
-            <Text style={styles.detailsText}>Address: {item.profiles?.address}</Text>
+            <Text style={styles.detailsText}>Customer: {item.profiles?.full_name || 'New Neighbor'}</Text>
+            <Text style={styles.detailsText}>Address: {item.profiles?.address || 'Address Pending'}</Text>
             <Text style={styles.detailsText}>Portions Requested: {item.portions_requested}</Text>
           </View>
         )}
@@ -63,7 +71,12 @@ const styles = StyleSheet.create({
   manifestCard: { padding: 15, backgroundColor: '#fff', borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#ddd' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   boldText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  statusBadge: { backgroundColor: '#ffe082', color: '#b78103', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, fontSize: 12, fontWeight: 'bold' },
+  statusBadge: { 
+    paddingHorizontal: 8, paddingVertical: 2, 
+    borderRadius: 12, 
+    fontSize: 12, 
+    fontWeight: 'bold' 
+  },
   detailsText: { fontSize: 14, color: '#555', marginTop: 2 },
   centered: { flex: 1, justifyContent: 'center' }
 });
