@@ -1,37 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, Button } from 'react-native';
 import CustomerMenu from './src/components/CustomerMenu';
 import AdminDashboard from './src/components/AdminDashboard';
+import AuthScreen from './src/components/AuthScreen';
 import { supabase } from './src/services/supabase';
 
 export default function App() {
-  // Options: 'customer' or 'admin'
+  const [sessionUser, setSessionUser] = useState(null);
   const [currentView, setCurrentView] = useState('customer');
 
-  return (
-    <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-      {/* Global Navigation Bar */}
-      <nav style={{ marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #ccc' }}>
-        <button 
-          onClick={() => setCurrentView('customer')}
-          style={{ marginRight: '10px', fontWeight: currentView === 'customer' ? 'bold' : 'normal' }}
-        >
-          Weekly Menu
-        </button>
-        <button 
-          onClick={() => setCurrentView('admin')}
-          style={{ fontWeight: currentView === 'admin' ? 'bold' : 'normal' }}
-        >
-          Admin Dashboard
-        </button>
-      </nav>
+  useEffect(() => {
+    // Check initial session state on app load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSessionUser(session?.user ?? null);
+    });
 
-      {/* Conditional Rendering Logic */}
-      <main>
-        {currentView === 'customer' && <CustomerMenu />}
-        {currentView === 'admin' && <AdminDashboard />}
-      </main>
-    </div>
+    // Listen to changes in auth states automatically
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!sessionUser) {
+    return <AuthScreen onAuthSuccess={(user) => setSessionUser(user)} />;
+  }
+
+  return (
+    <View style={{ flex: 1, paddingTop: 50 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingBottom: 10 }}>
+        <Button title="Menu" onPress={() => setCurrentView('customer')} />
+        <Button title="Admin" onPress={() => setCurrentView('admin')} />
+        <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="red" />
+      </View>
+      {currentView === 'customer' ? <CustomerMenu /> : <AdminDashboard />}
+    </View>
   );
 }
 
