@@ -6,6 +6,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null); // Tracks layout loading spinners for row clicks
   
   // Form State Layout
   const [showForm, setShowForm] = useState(false);
@@ -17,7 +18,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchMasterManifest() {
       try {
-        // SQL Join: Fetch orders data alongside related meal and profile info
         const { data, error } = await supabase
           .from('orders')
           .select(`
@@ -80,6 +80,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleOrderStatus = async (orderId, currentStatus) => {
+    if (updatingId) return;
+    setUpdatingId(orderId);
+
+    // Toggle logic: if it's currently 'pending', mark it 'confirmed'. Otherwise, flip it back.
+    const nextStatus = currentStatus === 'pending' ? 'confirmed' : 'pending';
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: nextStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      // Pessimistic Client Update: Update local view array match instantly
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId ? { ...order, status: nextStatus } : order
+        )
+      );
+    } catch (err) {
+      console.error('Failed to patch order lifecycle status:', err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   if (loading) return <ActivityIndicator size="large" style={styles.centered} />;
 
   return (
@@ -113,12 +141,25 @@ export default function AdminDashboard() {
             multiline
             style={[styles.input, styles.textArea]}
           />
-          <TextInput
-            placeholder="Serving Date (YYYY-MM-DD format)"
-            value={servingDate}
-            onChangeText={setServingDate}
-            style={styles.input}
-          />
+          <View style={styles.datePickerContainer}>
+            <Text style={styles.inputLabel}>Serving Date:</Text>
+            <input
+              type="date"
+              value={servingDate}
+              onChange={(e) => setServingDate(e.target.value)}
+              style={{
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                padding: '10px',
+                fontSize: '15px',
+                fontFamily: 'sans-serif',
+                marginBottom: '12px',
+                backgroundColor: '#fff',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
+          </View>
           <TextInput
             placeholder="Total Portions Available"
             value={totalPortions}
@@ -144,23 +185,40 @@ export default function AdminDashboard() {
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.manifestCard}>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>{item.meals?.dish_name || 'Unknown Meal'}</Text>
-              <Text style={[
-                styles.statusBadge, 
-                { backgroundColor: item.status === 'confirmed' ? '#e6f4ea' : '#fff3e0',
-                  color: item.status === 'confirmed' ? '#137333' : '#b06000' }
-              ]}>
-                {item.status?.toUpperCase()}
-              </Text>
+        renderItem={({ item }) => {
+          const isConfirmed = item.status === 'confirmed';
+
+          return (
+            <View style={[styles.manifestCard, isConfirmed && styles.confirmedManifestCard]}>
+              <View style={styles.cardInfoSplit}>
+                <View style={styles.row}>
+                  <Text style={styles.boldText}>{item.meals?.dish_name || 'Unknown Meal'}</Text>
+                  <Text style={[
+                    styles.statusBadge, 
+                    { backgroundColor: isConfirmed ? '#e6f4ea' : '#fff3e0',
+                      color: isConfirmed ? '#137333' : '#b06000' }
+                  ]}>
+                    {item.status?.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.detailsText}>Customer: {item.profiles?.full_name || 'New Neighbor'}</Text>
+                <Text style={styles.detailsText}>Address: {item.profiles?.address || 'Address Pending'}</Text>
+                <Text style={styles.detailsText}>Portions Requested: {item.portions_requested}</Text>
+              </View>
+
+              {/* Check Mark Interaction Button Layout */}
+              <TouchableOpacity 
+                style={[styles.checkButton, isConfirmed && styles.confirmedCheckButton]}
+                onPress={() => handleToggleOrderStatus(item.id, item.status)}
+                disabled={updatingId === item.id}
+              >
+                <Text style={[styles.checkText, isConfirmed && styles.confirmedCheckText]}>
+                  {updatingId === item.id ? '...' : '✓'}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.detailsText}>Customer: {item.profiles?.full_name || 'New Neighbor'}</Text>
-            <Text style={styles.detailsText}>Address: {item.profiles?.address || 'Address Pending'}</Text>
-            <Text style={styles.detailsText}>Portions Requested: {item.portions_requested}</Text>
-          </View>
-        )}
+          );
+        }}
       />
     </View>
   );
@@ -172,7 +230,6 @@ const styles = StyleSheet.create({
   subHeader: { fontSize: 13, color: '#666', marginBottom: 15, marginTop: 2, textAlign: 'center' },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, marginTop: 10 },
   
-  // Interactive Form Elements Styling
   toggleButton: { backgroundColor: '#2563eb', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
   cancelToggleButton: { backgroundColor: '#64748b' },
   toggleButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
@@ -183,12 +240,23 @@ const styles = StyleSheet.create({
   textArea: { height: 60, textAlignVertical: 'top' },
   submitButton: { backgroundColor: '#16a34a', padding: 12, borderRadius: 6, alignItems: 'center', marginTop: 5 },
   submitButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  datePickerContainer: { width: '100%', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  // Manifest Card List Layout Elements
-  manifestCard: { padding: 15, backgroundColor: '#fff', borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#ddd' },
+  // Manifest Card Structure (Side-by-Side Flex Split Row)
+  manifestCard: { flexDirection: 'row', padding: 15, backgroundColor: '#fff', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'space-between' },
+  confirmedManifestCard: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
+  cardInfoSplit: { flex: 1, paddingRight: 10 },
+
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   boldText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, fontSize: 11, fontWeight: 'bold' },
   detailsText: { fontSize: 14, color: '#555', marginTop: 2 },
-  centered: { flex: 1, justifyContent: 'center' }
+  centered: { flex: 1, justifyContent: 'center' },
+
+  // Check Mark Action Button Styles
+  checkButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  confirmedCheckButton: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  checkText: { fontSize: 18, fontWeight: 'bold', color: '#cbd5e1', marginTop: -2 },
+  confirmedCheckText: { color: '#fff' }
 });
