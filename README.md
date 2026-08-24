@@ -2,8 +2,6 @@
 
 An autonomous, full-stack logistics and order-scheduling application designed to streamline weekly menu coordination, customer tracking, and fulfillment operations for a localized meal delivery enterprise.
 
-## 🚀 The Real-World Business Problem
-
 Traditional localized food operations face significant scheduling overhead, relying on disconnected communication channels (e.g., text threads, local messaging apps) to coordinate weekly manifests. This application replaces manual tracking bottlenecks with a single data circuit:
 - **For Neighbors:** Provides a clean, responsive interface to review weekly menu rotations and securely lock in specific portion requests.
 - **For the Chef (Admin):** Compiles an aggregated, real-time routing and cooking manifest, eliminating data redundancy and entry errors.
@@ -21,7 +19,7 @@ The platform is engineered using modern, decoupled full-stack architecture princ
 
 ---
 
-## 🗄️ Relational Database Schema Design
+## Relational Database Schema Design
 
 The underlying PostgreSQL engine tracks entity states through three interconnected tables utilizing strict Foreign Key constraints:
 
@@ -51,7 +49,7 @@ The core relationship table connecting users to meal allocations.
 
 ---
 
-## 💎 Advanced Engineering Proof Points
+## Advanced Engineering Proof Points
 
 This project features high-utility patterns that demonstrate robust software design:
 
