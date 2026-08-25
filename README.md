@@ -6,6 +6,8 @@ Traditional localized food operations face significant scheduling overhead, rely
 - **For Neighbors:** Provides a clean, responsive interface to review weekly menu rotations and securely lock in specific portion requests.
 - **For the Chef (Admin):** Compiles an aggregated, real-time routing and cooking manifest, eliminating data redundancy and entry errors.
 
+# Live at: https://stans-pantry.vercel.app
+
 ---
 
 ## 🛠️ Tech Stack & Systems Architecture
