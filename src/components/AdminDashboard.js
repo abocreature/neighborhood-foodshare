@@ -4,9 +4,11 @@ import { supabase } from '../services/supabase';
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
+  const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [updatingId, setUpdatingId] = useState(null); // Tracks layout loading spinners for row clicks
+  const [updatingId, setUpdatingId] = useState(null);
+  const [deletingMealId, setDeletingMealId] = useState(null); 
   
   // Form State Layout
   const [showForm, setShowForm] = useState(false);
@@ -15,29 +17,37 @@ export default function AdminDashboard() {
   const [servingDate, setServingDate] = useState(''); // Expected format: YYYY-MM-DD
   const [totalPortions, setTotalPortions] = useState('10'); // Default placeholder default count
 
-  useEffect(() => {
-    async function fetchMasterManifest() {
-      try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select(`
-            id,
-            portions_requested,
-            status,
-            meals ( dish_name, serving_date ),
-            profiles ( full_name, address )
-          `)
-          .order('created_at', { ascending: false });
+  async function fetchMasterManifest() {
+    try {
+      const { data, orderError } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          portions_requested,
+          status,
+          meals ( dish_name, serving_date ),
+          profiles ( full_name, address )
+        `)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setOrders(data || []);
-      } catch (err) {
-        console.error('Error fetching manifest:', err.message);
-      } finally {
-        setLoading(false);
-      }
+      if (orderError) throw orderError;
+
+      const { data: mealData, error: mealError } = await supabase
+        .from('meals')
+        .select('*')
+        .order('serving_date', { ascending: false});
+      if (mealError) throw mealError;
+
+      setOrders(data || []);
+      setMeals(mealData || []);
+    } catch (err) {
+      console.error('Error fetching manifest:', err.message);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(()=> {
     fetchMasterManifest();
   }, []);
 
@@ -105,6 +115,33 @@ export default function AdminDashboard() {
       console.error('Failed to patch order lifecycle status:', err.message);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleDeleteMeal = async (mealId) => {
+    if (deletingMealId) return;
+    
+    const confirmDelete = window.confirm("Are you absolute certain you want to delete this menu meal? This will cascade-wipe related customer delivery links.");
+    if (!confirmDelete) return;
+
+    setDeletingMealId(mealId);
+    try {
+      const { error } = await supabase
+        .from('meals')
+        .delete()
+        .eq('id', mealId);
+
+      if (error) throw error;
+      console.log(error);
+
+      // Update local state views cleanly without reloading network components
+      setMeals(prevMeals => prevMeals.filter(meal => meal.id !== mealId));
+      // Refresh delivery manifest logs in case linked allocations were deleted
+      fetchMasterManifest();
+    } catch (err) {
+      alert(`Deletion Error: ${err.message}`);
+    } finally {
+      setDeletingMealId(null);
     }
   };
 
@@ -180,6 +217,30 @@ export default function AdminDashboard() {
         </View>
       )}
 
+      <Text style={styles.sectionTitle}>Active Menu Rotations</Text>
+      <View style={{ maxHeight: 220, marginBottom: 15 }}>
+        <FlatList
+          data={meals}
+          nestedScrollEnabled={true}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.menuManagementCard}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.menuDateText}>{new Date(item.serving_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</Text>
+                <Text style={styles.menuDishName}>{item.dish_name}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.deleteButton} 
+                onPress={() => handleDeleteMeal(item.id)}
+                disabled={deletingMealId === item.id}
+              >
+                <Text style={styles.deleteButtonText}>{deletingMealId === item.id ? '...' : '✕'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      </View>
+
       {/* Orders List Component */}
       <Text style={styles.sectionTitle}>Active Order Delivery Manifest</Text>
       <FlatList
@@ -242,6 +303,13 @@ const styles = StyleSheet.create({
   submitButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
   datePickerContainer: { width: '100%', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  // New Menu Item Card Management Component Layout Styles
+  menuManagementCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8 },
+  menuDateText: { fontSize: 11, fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase' },
+  menuDishName: { fontSize: 15, fontWeight: '600', color: '#1e293b', marginTop: 2 },
+  deleteButton: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
+  deleteButtonText: { fontSize: 11, fontWeight: 'bold', color: '#ef4444', marginTop: -1 },
 
   // Manifest Card Structure (Side-by-Side Flex Split Row)
   manifestCard: { flexDirection: 'row', padding: 15, backgroundColor: '#fff', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'space-between' },
