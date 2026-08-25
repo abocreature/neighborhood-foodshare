@@ -47,8 +47,6 @@ export default function CustomerMenu({ user }) {
           .eq('neighbor_id', user.id)
           .in('status', ['pending', 'confirmed']);
         if (orderError) throw orderError;
-        console.log(orderData);
-        console.log(user.id);
 
         const claimsMap = {};
         (orderData || []).forEach(order => {
