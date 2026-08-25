@@ -45,8 +45,10 @@ export default function CustomerMenu({ user }) {
           .from('orders')
           .select('id, meal_id, portions_requested, status')
           .eq('neighbor_id', user.id)
-          .eq('status', 'pending');
+          .in('status', ['pending', 'confirmed']);
         if (orderError) throw orderError;
+        console.log(orderData);
+        console.log(user.id);
 
         const claimsMap = {};
         (orderData || []).forEach(order => {
