@@ -9,7 +9,10 @@ export default function AdminDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingMealId, setDeletingMealId] = useState(null); 
-  
+ 
+  // Inner Administrative Navigation State: 'manifest' or 'menu'
+  const [adminView, setAdminView] = useState('manifest');
+
   // Form State Layout
   const [showForm, setShowForm] = useState(false);
   const [dishName, setDishName] = useState('');
@@ -149,138 +152,98 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Dad's Chef Admin Panel</Text>
-      <Text style={styles.subHeader}>Track delivery schedules and post upcoming menus.</Text>
       
-      {/* Form Toggle Button */}
-      <TouchableOpacity 
-        style={[styles.toggleButton, showForm && styles.cancelToggleButton]} 
-        onPress={() => setShowForm(!showForm)}
-      >
-        <Text style={styles.toggleButtonText}>{showForm ? '✕ Close Form' : '+ Post New Meal'}</Text>
-      </TouchableOpacity>
+      {/* Sub-Navigation Bar for your Dad */}
+      <View style={styles.subNavBar}>
+        <TouchableOpacity 
+          style={[styles.subNavButton, adminView === 'manifest' && styles.activeSubNavButton]}
+          onPress={() => setAdminView('manifest')}
+        >
+          <Text style={[styles.subNavText, adminView === 'manifest' && styles.activeSubNavText]}>📋 Orders Manifest</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.subNavButton, adminView === 'menu' && styles.activeSubNavButton]}
+          onPress={() => setAdminView('menu')}
+        >
+          <Text style={[styles.subNavText, adminView === 'menu' && styles.activeSubNavText]}>🍳 Manage Meals</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Dynamic Input Form Segment Layout */}
-      {showForm && (
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>New Menu Item Configurations</Text>
-          
-          <TextInput
-            placeholder="Dish Name (e.g., Rosemary Baked Chicken)"
-            value={dishName}
-            onChangeText={setDishName}
-            style={styles.input}
+      {/* VIEW SPACE 1: Orders Manifest Workspace */}
+      {adminView === 'manifest' && (
+        <View style={{ flex: 1 }}>
+          <Text style={styles.sectionTitle}>Active Order Delivery Manifest</Text>
+          <FlatList
+            data={orders}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => {
+              const isConfirmed = item.status === 'confirmed';
+              return (
+                <View style={[styles.manifestCard, isConfirmed && styles.confirmedManifestCard]}>
+                  <View style={styles.cardInfoSplit}>
+                    <View style={styles.row}>
+                      <Text style={styles.boldText}>{item.meals?.dish_name || 'Deleted Meal'}</Text>
+                      <Text style={[styles.statusBadge, { backgroundColor: isConfirmed ? '#e6f4ea' : '#fff3e0', color: isConfirmed ? '#137333' : '#b06000' }]}>
+                        {item.status?.toUpperCase()}
+                      </Text>
+                    </View>
+                    <Text style={styles.detailsText}>Customer: {item.profiles?.full_name}</Text>
+                    <Text style={styles.detailsText}>Address: {item.profiles?.address}</Text>
+                    <Text style={styles.detailsText}>Portions Requested: {item.portions_requested}</Text>
+                  </View>
+                  <TouchableOpacity style={[styles.checkButton, isConfirmed && styles.confirmedCheckButton]} onPress={() => handleToggleOrderStatus(item.id, item.status)} disabled={updatingId === item.id}>
+                    <Text style={[styles.checkText, isConfirmed && styles.confirmedCheckText]}>{updatingId === item.id ? '...' : '✓'}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
           />
-          <TextInput
-            placeholder="Description (e.g., Served with a side of potatoes)"
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            style={[styles.input, styles.textArea]}
-          />
-          <View style={styles.datePickerContainer}>
-            <Text style={styles.inputLabel}>Serving Date:</Text>
-            <input
-              type="date"
-              value={servingDate}
-              onChange={(e) => setServingDate(e.target.value)}
-              style={{
-                border: '1px solid #cbd5e1',
-                borderRadius: '6px',
-                padding: '10px',
-                fontSize: '15px',
-                fontFamily: 'sans-serif',
-                marginBottom: '12px',
-                backgroundColor: '#fff',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-            />
-          </View>
-          <TextInput
-            placeholder="Total Portions Available"
-            value={totalPortions}
-            onChangeText={setTotalPortions}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-
-          <TouchableOpacity 
-            style={styles.submitButton} 
-            onPress={handleCreateMeal}
-            disabled={submitting}
-          >
-            <Text style={styles.submitButtonText}>
-              {submitting ? 'Publishing Asset...' : 'Publish to Weekly Menu'}
-            </Text>
-          </TouchableOpacity>
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Active Menu Rotations</Text>
-      <View style={{ maxHeight: 220, marginBottom: 15 }}>
-        <FlatList
-          data={meals}
-          nestedScrollEnabled={true}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.menuManagementCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.menuDateText}>{new Date(item.serving_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</Text>
-                <Text style={styles.menuDishName}>{item.dish_name}</Text>
+      {/* VIEW SPACE 2: Menu Rotation & Creation Manager Workspace */}
+      {adminView === 'menu' && (
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity style={[styles.toggleButton, showForm && styles.cancelToggleButton]} onPress={() => setShowForm(!showForm)}>
+            <Text style={styles.toggleButtonText}>{showForm ? '✕ Close Form' : '+ Create New Menu Rotation'}</Text>
+          </TouchableOpacity>
+
+          {showForm && (
+            <View style={styles.formCard}>
+              <Text style={styles.formTitle}>New Menu Item Configurations</Text>
+              <TextInput placeholder="Dish Name" value={dishName} onChangeText={setDishName} style={styles.input} />
+              <TextInput placeholder="Description" value={description} onChangeText={setDescription} multiline style={[styles.input, styles.textArea]} />
+              <View style={styles.datePickerContainer}>
+                <Text style={styles.inputLabel}>Serving Date:</Text>
+                <input type="date" value={servingDate} onChange={(e) => setServingDate(e.target.value)} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', fontSize: '15px', fontFamily: 'sans-serif', marginBottom: '12px', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box' }} />
               </View>
-              <TouchableOpacity 
-                style={styles.deleteButton} 
-                onPress={() => handleDeleteMeal(item.id)}
-                disabled={deletingMealId === item.id}
-              >
-                <Text style={styles.deleteButtonText}>{deletingMealId === item.id ? '...' : '✕'}</Text>
+              <TextInput placeholder="Total Portions Available" value={totalPortions} onChangeText={setTotalPortions} keyboardType="numeric" style={styles.input} />
+              <TouchableOpacity style={styles.submitButton} onPress={handleCreateMeal} disabled={submitting}>
+                <Text style={styles.submitButtonText}>{submitting ? 'Publishing...' : 'Publish to Menu'}</Text>
               </TouchableOpacity>
             </View>
           )}
-        />
-      </View>
 
-      {/* Orders List Component */}
-      <Text style={styles.sectionTitle}>Active Order Delivery Manifest</Text>
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => {
-          const isConfirmed = item.status === 'confirmed';
-
-          return (
-            <View style={[styles.manifestCard, isConfirmed && styles.confirmedManifestCard]}>
-              <View style={styles.cardInfoSplit}>
-                <View style={styles.row}>
-                  <Text style={styles.boldText}>{item.meals?.dish_name || 'Unknown Meal'}</Text>
-                  <Text style={[
-                    styles.statusBadge, 
-                    { backgroundColor: isConfirmed ? '#e6f4ea' : '#fff3e0',
-                      color: isConfirmed ? '#137333' : '#b06000' }
-                  ]}>
-                    {item.status?.toUpperCase()}
-                  </Text>
+          <Text style={styles.sectionTitle}>Active Menu Rotations</Text>
+          <FlatList
+            data={meals}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.menuManagementCard}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuDateText}>{new Date(item.serving_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</Text>
+                  <Text style={styles.menuDishName}>{item.dish_name}</Text>
                 </View>
-                <Text style={styles.detailsText}>Customer: {item.profiles?.full_name || 'New Neighbor'}</Text>
-                <Text style={styles.detailsText}>Address: {item.profiles?.address || 'Address Pending'}</Text>
-                <Text style={styles.detailsText}>Portions Requested: {item.portions_requested}</Text>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteMeal(item.id)} disabled={deletingMealId === item.id}>
+                  <Text style={styles.deleteButtonText}>{deletingMealId === item.id ? '...' : '✕'}</Text>
+                </TouchableOpacity>
               </View>
+            )}
+          />
+        </View>
+      )}
 
-              {/* Check Mark Interaction Button Layout */}
-              <TouchableOpacity 
-                style={[styles.checkButton, isConfirmed && styles.confirmedCheckButton]}
-                onPress={() => handleToggleOrderStatus(item.id, item.status)}
-                disabled={updatingId === item.id}
-              >
-                <Text style={[styles.checkText, isConfirmed && styles.confirmedCheckText]}>
-                  {updatingId === item.id ? '...' : '✓'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          );
-        }}
-      />
     </View>
   );
 }
@@ -290,6 +253,13 @@ const styles = StyleSheet.create({
   header: { fontSize: 22, fontWeight: 'bold', color: '#222', textAlign: 'center' },
   subHeader: { fontSize: 13, color: '#666', marginBottom: 15, marginTop: 2, textAlign: 'center' },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, marginTop: 10 },
+
+  // Custom Inner Tab Bar Navigation Styles
+  subNavBar: { flexDirection: 'row', backgroundColor: '#e2e8f0', borderRadius: 8, padding: 4, marginBottom: 20 },
+  subNavButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
+  activeSubNavButton: { backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
+  subNavText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
+  activeSubNavText: { color: '#1e293b' },
   
   toggleButton: { backgroundColor: '#2563eb', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
   cancelToggleButton: { backgroundColor: '#64748b' },

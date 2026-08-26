@@ -33,9 +33,11 @@ export default function CustomerMenu({ user }) {
         if (profileData) setProfileName(profileData.full_name);
 
         // Fetching upcoming meals
+        const todayString = new Date().toISOString().split('T')[0];
         const { data: mealData, error: mealError } = await supabase
           .from('meals')
           .select('*')
+          .gte('serving_date', todayString)
           .order('serving_date', { ascending: false });
 
         if (mealError) throw mealError;
