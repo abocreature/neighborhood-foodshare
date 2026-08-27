@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput } from 'react-native';
-import { supabase } from '../services/supabase'
+import { supabase } from '../services/supabase';
 
 export default function CustomerMenu({ user }) {
   const [meals, setMeals] = useState([]);

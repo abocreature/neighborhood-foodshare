@@ -3,12 +3,14 @@ import { StyleSheet, Text, View, ActivityIndicator, Button } from 'react-native'
 import CustomerMenu from './src/components/CustomerMenu';
 import AdminDashboard from './src/components/AdminDashboard';
 import AuthScreen from './src/components/AuthScreen';
+import ProfilePage from './src/components/ProfilePage';
 import { supabase } from './src/services/supabase';
 
 export default function App() {
   const [sessionUser, setSessionUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [resolvingRole, setResolvingRole] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const fetchUserRole = async (userId) => {
     setResolvingRole(true);
@@ -65,12 +67,19 @@ export default function App() {
           <Text style={styles.userEmailText}>
             Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text>
           </Text>
-          <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="#ef4444" />
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+            {userRole === 'neighbor' && !showProfile && (
+              <Button title="My Account" onPress={() => setShowProfile(true)} color="#2563eb" />
+            )}
+            <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="#ef4444" />
+          </View>
         </View>
 
         <View style={{ flex: 1 }}>
           {userRole === 'chef' ? (
             <AdminDashboard user={sessionUser} />
+          ) : showProfile ? (
+            <ProfilePage user={sessionUser} onClose={() => setShowProfile(false)} />
           ) : (
             <CustomerMenu user={sessionUser} />
           )}
