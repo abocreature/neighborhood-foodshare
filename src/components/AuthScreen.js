@@ -2,46 +2,81 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Platform, Alert } from 'react-native';
 import { supabase } from '../services/supabase';
 
-const showAlert = (title, message) => {
-  if (Platform.OS === 'web') {
-    // If testing in Chrome/Safari browser, use standard web alerts
-    alert(`${title}: ${message}`);
-  } else {
-    // If testing on your physical phone via Expo Go, use native alerts
-    Alert.alert(title, message);
-  }
-};
-
 export default function AuthScreen({ onAuthSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errorText, setErrorText] = useState('');
+  const [successText, setSuccessText] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleAuth = async () => {
-    if (!email || !password) return showAlert('Error', 'Please fill in all fields');
+  const toggleFormMode = () => {
+    setIsSignUp(!isSignUp);
+    setErrorText('');
+    setSuccessText('');
+    setPassword('');
+    setConfirmPassword('');
+  };
+
+  const handleAuth = async (overrideEmail = null, overridePassword = null) => {
+    setErrorText('');
+    setSuccessText('');
+
+    const targetEmail = overrideEmail || email;
+    const targetPassword = overridePassword || password;
+
+    if (!targetEmail || !targetPassword) {
+      setErrorText('Please populate authentication credentials.');
+      return;
+    }
+    
+    // Check validation constraints on registration specifically
+    if (isSignUp) {
+      if (!fullName || !address || !phone || !confirmPassword) {
+        setErrorText('All registration fields are strictly required.');
+        return;
+      }
+      // CRITICAL PASSWORD RECONCILIATION CHECK
+      if (targetPassword !== confirmPassword) {
+        setErrorText('Passwords do not match. Please verify.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        // Sign Up with custom metadata passed into our trigger
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName } }
+        // Register Account: Pass custom metadata straight down to our database trigger function
+        const { error } = await supabase.auth.signUp({
+          email: targetEmail,
+          password: targetPassword,
+          options: { 
+            data: { 
+              full_name: fullName,
+              address: address,
+              phone: phone
+            } 
+          }
         });
         if (error) throw error;
-        showAlert('Success', 'Account created! Please log in.');
+        setSuccessText('Account created! Please log in below.');
         setIsSignUp(false);
       } else {
-        // Log In
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        // Sign In
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: targetPassword
+        });
         if (error) throw error;
         onAuthSuccess(data.user);
       }
     } catch (err) {
-      showAlert('Authentication Error', err.message);
+      setErrorText(err.message);
     } finally {
       setLoading(false);
     }
@@ -52,13 +87,33 @@ export default function AuthScreen({ onAuthSuccess }) {
       <View style={styles.card}>
         <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Neighborhood Foodshare'}</Text>
         
+        {errorText ? <Text style={styles.errorInlineText}>⚠️ {errorText}</Text> : null}
+        {successText ? <Text style={styles.successInlineText}>✓ {successText}</Text> : null}
+
         {isSignUp && (
-          <TextInput 
-            placeholder="Full Name" 
-            value={fullName} 
-            onChangeText={setFullName} 
-            style={styles.input} 
-          />
+          <View style={{ width: '100%' }}>
+            <TextInput 
+              placeholder="Full Name" 
+              value={fullName} 
+              onChangeText={setFullName} 
+              style={styles.input} 
+            />
+            {/* NEW ADDITION: ADDRESS INPUT BOX */}
+            <TextInput 
+              placeholder="Delivery Address (e.g., 123 Maple St)" 
+              value={address} 
+              onChangeText={setAddress} 
+              style={styles.input} 
+            />
+            {/* NEW ADDITION: PHONE NUMBER INPUT BOX */}
+            <TextInput 
+              placeholder="Phone Number (e.g., 828-555-0199)" 
+              value={phone} 
+              onChangeText={setPhone} 
+              keyboardType="phone-pad"
+              style={styles.input} 
+            />
+          </View>
         )}
         <TextInput 
           placeholder="Email Address" 
@@ -74,6 +129,15 @@ export default function AuthScreen({ onAuthSuccess }) {
           secureTextEntry 
           style={styles.input} 
         />
+        {isSignUp && (
+          <TextInput 
+            placeholder="Confirm Password" 
+            value={confirmPassword} 
+            onChangeText={setConfirmPassword} 
+            secureTextEntry 
+            style={styles.input} 
+          />
+        )}
 
         <TouchableOpacity style={styles.button} onPress={() => handleAuth()} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Syncing...' : isSignUp ? 'Register Account' : 'Sign In'}</Text>
@@ -144,6 +208,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 15, backgroundColor: '#f8fafc', minHeight: '100vh' },
   card: { width: '100%', maxWidth: 400, backgroundColor: '#fff', padding: 25, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#1e293b' },
+
+  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderHorizontalWidth: 1, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%' },
+  successInlineText: { color: '#16a34a', backgroundColor: '#f0fdf4', padding: 10, borderRadius: 6, borderHorizontalWidth: 1, borderLeftWidth: 4, borderLeftColor: '#16a34a', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%' },
+  
   input: { borderWidth: 1, borderColor: '#cbd5e1', padding: 12, borderRadius: 6, marginBottom: 15, fontSize: 15, backgroundColor: '#fff' },
   button: { backgroundColor: '#2563eb', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 5 },
   buttonText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
