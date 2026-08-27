@@ -18,7 +18,6 @@ export default function AdminDashboard() {
   const [dishName, setDishName] = useState('');
   const [description, setDescription] = useState('');
   const [servingDate, setServingDate] = useState(''); // Expected format: YYYY-MM-DD
-  const [totalPortions, setTotalPortions] = useState('10'); // Default placeholder default count
 
   const toggleFormView = () => {
     setShowForm(!showForm);
@@ -81,7 +80,6 @@ export default function AdminDashboard() {
             dish_name: dishName,
             description: description,
             serving_date: servingDate,
-            total_portions: parseInt(totalPortions, 10) || 0,
             chef_id: (await supabase.auth.getUser()).data.user?.id // Dynamically links your dad's auth account ID
           }
         ]).select('*');
@@ -215,8 +213,8 @@ export default function AdminDashboard() {
       {/* VIEW SPACE 2: Menu Rotation & Creation Manager Workspace */}
       {adminView === 'menu' && (
         <View style={{ flex: 1 }}>
-          <TouchableOpacity style={[styles.toggleButton, showForm && styles.cancelToggleButton]} onPress={() => setShowForm(!showForm)}>
-            <Text style={styles.toggleButtonText}>{showForm ? '✕ Close Form' : '+ Create New Menu Rotation'}</Text>
+          <TouchableOpacity style={[styles.toggleButton, showForm && styles.cancelToggleButton]} onPress={toggleFormView}>
+            <Text style={styles.toggleButtonText}>{showForm ? '✕ Close' : '+ Create New Menu Rotation'}</Text>
           </TouchableOpacity>
 
           {showForm && (
@@ -230,7 +228,6 @@ export default function AdminDashboard() {
                 <Text style={styles.inputLabel}>Serving Date:</Text>
                 <input type="date" value={servingDate} onChange={(e) => setServingDate(e.target.value)} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', fontSize: '15px', fontFamily: 'sans-serif', marginBottom: '12px', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box' }} />
               </View>
-              <TextInput placeholder="Total Portions Available" value={totalPortions} onChangeText={setTotalPortions} keyboardType="numeric" style={styles.input} />
               <TouchableOpacity style={styles.submitButton} onPress={handleCreateMeal} disabled={submitting}>
                 <Text style={styles.submitButtonText}>{submitting ? 'Publishing...' : 'Publish to Menu'}</Text>
               </TouchableOpacity>
