@@ -9,19 +9,26 @@ export default function AdminDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingMealId, setDeletingMealId] = useState(null); 
- 
-  // Inner Administrative Navigation State: 'manifest' or 'menu'
-  const [adminView, setAdminView] = useState('manifest');
 
-  // Form State Layout
+  const [errorText, setErrorText] = useState('');
+  const [successText, setSuccessText] = useState('');
+ 
+  const [adminView, setAdminView] = useState('manifest');
   const [showForm, setShowForm] = useState(false);
   const [dishName, setDishName] = useState('');
   const [description, setDescription] = useState('');
   const [servingDate, setServingDate] = useState(''); // Expected format: YYYY-MM-DD
   const [totalPortions, setTotalPortions] = useState('10'); // Default placeholder default count
 
+  const toggleFormView = () => {
+    setShowForm(!showForm);
+    setErrorText('');
+    setSuccessText('');
+  };
+
   async function fetchMasterManifest() {
     try {
+      setErrorText('');
       const { data, orderError } = await supabase
         .from('orders')
         .select(`
@@ -44,7 +51,7 @@ export default function AdminDashboard() {
       setOrders(data || []);
       setMeals(mealData || []);
     } catch (err) {
-      console.error('Error fetching manifest:', err.message);
+      setErrorText(`Dashboard reload failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -56,15 +63,18 @@ export default function AdminDashboard() {
 
   // Form Submit Handler: Writes a new row to the 'meals' table
   const handleCreateMeal = async () => {
+    setErrorText('');
+    setSuccessText('');
+
     if (!dishName || !servingDate) {
-      alert('Error: Dish Name and Serving Date are strictly required.');
+      setErrorText('Dish Name and Serving Date are strictly required.');
       return;
     }
     
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('meals')
         .insert([
           {
@@ -74,20 +84,22 @@ export default function AdminDashboard() {
             total_portions: parseInt(totalPortions, 10) || 0,
             chef_id: (await supabase.auth.getUser()).data.user?.id // Dynamically links your dad's auth account ID
           }
-        ]);
+        ]).select('*');
 
       if (error) throw error;
 
-      alert('Success! New meal posted to the weekly menu.');
+      setSuccessText('New meal published successfully!');
+      setDishName(''); setDescription(''); setServingDate('');
       
       // Clear form inputs and reset view state
       setDishName('');
       setDescription('');
       setServingDate('');
-      setShowForm(false);
+
+      if (data) setMeals(prev => [...prev, ...data].sort((a,b) => new Date(a.serving_date) - new Date(b.serving_date)));
       
     } catch (err) {
-      alert(`Database Error: ${err.message}`);
+      setErrorText(err.message); 
     } finally {
       setSubmitting(false);
     }
@@ -96,8 +108,7 @@ export default function AdminDashboard() {
   const handleToggleOrderStatus = async (orderId, currentStatus) => {
     if (updatingId) return;
     setUpdatingId(orderId);
-
-    // Toggle logic: if it's currently 'pending', mark it 'confirmed'. Otherwise, flip it back.
+    setErrorText('');
     const nextStatus = currentStatus === 'pending' ? 'confirmed' : 'pending';
 
     try {
@@ -115,7 +126,7 @@ export default function AdminDashboard() {
         )
       );
     } catch (err) {
-      console.error('Failed to patch order lifecycle status:', err.message);
+      setErrorText(`Status update failed: ${err.message}`); 
     } finally {
       setUpdatingId(null);
     }
@@ -128,6 +139,7 @@ export default function AdminDashboard() {
     if (!confirmDelete) return;
 
     setDeletingMealId(mealId);
+    setErrorText('');
     try {
       const { error } = await supabase
         .from('meals')
@@ -135,14 +147,11 @@ export default function AdminDashboard() {
         .eq('id', mealId);
 
       if (error) throw error;
-      console.log(error);
 
-      // Update local state views cleanly without reloading network components
       setMeals(prevMeals => prevMeals.filter(meal => meal.id !== mealId));
-      // Refresh delivery manifest logs in case linked allocations were deleted
       fetchMasterManifest();
     } catch (err) {
-      alert(`Deletion Error: ${err.message}`);
+      setErrorText(`Deletion tracking failed: ${err.message}`); 
     } finally {
       setDeletingMealId(null);
     }
@@ -152,6 +161,7 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
+      {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
       
       {/* Sub-Navigation Bar for your Dad */}
       <View style={styles.subNavBar}>
@@ -212,6 +222,8 @@ export default function AdminDashboard() {
           {showForm && (
             <View style={styles.formCard}>
               <Text style={styles.formTitle}>New Menu Item Configurations</Text>
+              {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
+              {successText ? <Text style={styles.successInlineText}>{successText}</Text> : null}
               <TextInput placeholder="Dish Name" value={dishName} onChangeText={setDishName} style={styles.input} />
               <TextInput placeholder="Description" value={description} onChangeText={setDescription} multiline style={[styles.input, styles.textArea]} />
               <View style={styles.datePickerContainer}>
@@ -254,7 +266,9 @@ const styles = StyleSheet.create({
   subHeader: { fontSize: 13, color: '#666', marginBottom: 15, marginTop: 2, textAlign: 'center' },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, marginTop: 10 },
 
-  // Custom Inner Tab Bar Navigation Styles
+  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+  successInlineText: { color: '#16a34a', backgroundColor: '#f0fdf4', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#16a34a', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+
   subNavBar: { flexDirection: 'row', backgroundColor: '#e2e8f0', borderRadius: 8, padding: 4, marginBottom: 20 },
   subNavButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
   activeSubNavButton: { backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },

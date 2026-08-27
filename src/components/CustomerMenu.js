@@ -2,21 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput } from 'react-native';
 import { supabase } from '../services/supabase'
 
-const showAlert = (title, message) => {
-  if (Platform.OS === 'web') {
-    // If testing in Chrome/Safari browser, use standard web alerts
-    alert(`${title}: ${message}`);
-  } else {
-    // If testing on your physical phone via Expo Go, use native alerts
-    Alert.alert(title, message);
-  }
-};
-
 export default function CustomerMenu({ user }) {
   const [meals, setMeals] = useState([]);
   const [profileName, setProfileName] = useState('Neighbor');
   const [loading, setLoading] = useState(true);
   const [processingID, setProcessingID] = useState(null);
+  const [errorText, setErrorText] = useState('');
   const [activeClaims, setActiveClaims] = useState({});
 
   useEffect(() => {
@@ -61,7 +52,7 @@ export default function CustomerMenu({ user }) {
         setMeals(mealData || []);
         setActiveClaims(claimsMap);
       } catch (err) {
-        console.error('Data loading error: ', err.message);
+        setErrorText(`System synchronization error: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -73,6 +64,7 @@ export default function CustomerMenu({ user }) {
   const handleInitialClaim = async (mealID) => {
     if (processingID) return;
     setProcessingID(mealID);
+    setErrorText('');
 
     try {
       const { data, error } = await supabase
@@ -93,7 +85,7 @@ export default function CustomerMenu({ user }) {
           [mealID]: { orderID: data.id, portions: 1 }
         }));
     } catch (err) {
-      console.error('Initial claim transaction failed:', err.message);
+      setErrorText(`Initial claim failed: ${err.message}`);
     } finally {
       setProcessingID(null);
     }
@@ -102,6 +94,7 @@ export default function CustomerMenu({ user }) {
   const handleUpdatePortions = async (mealID, currentOrderID, newAmount) => {
     if (newAmount < 1 || processingID) return;
     setProcessingID(mealID);
+    setErrorText('');
 
     try {
       const { error } = await supabase
@@ -116,7 +109,7 @@ export default function CustomerMenu({ user }) {
         [mealID]: { ...prev[mealID], portions: newAmount }
       }));
     } catch (err) {
-      console.error('Portion adjustment failed:', err.message);
+      setErrorText(`Portion adjustment failed: ${err.message}`);
     } finally {
       setProcessingID(null);
     }
@@ -125,6 +118,7 @@ export default function CustomerMenu({ user }) {
   const handleCancelClaim = async (mealID, currentOrderID) => {
     if (processingID) return;
     setProcessingID(mealID);
+    setErrorText('');
 
     try {
       const { error } = await supabase
@@ -140,7 +134,7 @@ export default function CustomerMenu({ user }) {
         return updated;
       });
     } catch (err) {
-      console.error('Order cancellation failed:', err.message);
+      setErrorText(`Order cancellation failed: ${err.message}`);
     } finally {
       setProcessingID(null);
     }
@@ -157,6 +151,8 @@ export default function CustomerMenu({ user }) {
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back, {profileName}!</Text>
       <Text style={styles.subHeader}>Tap any dinner menu card to claim your portion delivery:</Text>
+
+      {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
 
       <FlatList
         data={meals}
@@ -226,6 +222,8 @@ const styles = StyleSheet.create({
   welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
   subHeader: { fontSize: 14, color: '#666', marginBottom: 15, marginTop: 4, textAlign: 'center' },
   centered: { flex: 1, justifyContent: 'center' },
+
+  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
   
   // Basic Card Styling
   card: { padding: 18, backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1, maxWidth: 600 },
