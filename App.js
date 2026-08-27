@@ -63,7 +63,7 @@ export default function App() {
         
         <View style={styles.navHeaderCard}>
           <Text style={styles.userEmailText}>
-            Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text> ({userRole?.toUpperCase()})
+            Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text>
           </Text>
           <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="#ef4444" />
         </View>

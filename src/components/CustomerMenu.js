@@ -150,7 +150,7 @@ export default function CustomerMenu({ user }) {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome back, {profileName}!</Text>
-      <Text style={styles.subHeader}>Tap any dinner menu card to claim your portion delivery:</Text>
+      <Text style={styles.subHeader}>Tap any dinner menu card to claim your delivery:</Text>
 
       {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
 
@@ -205,7 +205,7 @@ export default function CustomerMenu({ user }) {
                     >
                       <Text style={styles.arrowText}>+</Text>
                     </TouchableOpacity>
-                    <Text style={styles.unitText}>Dinner(s) Secured</Text>
+                    <Text style={styles.unitText}>Portion(s)</Text>
                   </View>
                 </View>
               )}

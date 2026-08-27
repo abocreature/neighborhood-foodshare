@@ -87,8 +87,8 @@ export default function AuthScreen({ onAuthSuccess }) {
       <View style={styles.card}>
         <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Neighborhood Foodshare'}</Text>
         
-        {errorText ? <Text style={styles.errorInlineText}>⚠️ {errorText}</Text> : null}
-        {successText ? <Text style={styles.successInlineText}>✓ {successText}</Text> : null}
+        {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
+        {successText ? <Text style={styles.successInlineText}>{successText}</Text> : null}
 
         {isSignUp && (
           <View style={{ width: '100%' }}>
@@ -152,7 +152,7 @@ export default function AuthScreen({ onAuthSuccess }) {
 
       {__DEV__ && (
         <View style={styles.devPanel}>
-          <Text style={styles.devTitle}>🛠️ DEV ENVIRONMENT BYPASS AUTOMATION</Text>
+          <Text style={styles.devTitle}>DEV ENVIRONMENT BYPASS AUTOMATION</Text>
           <View style={styles.devRow}>
             
             <TouchableOpacity 
@@ -173,7 +173,7 @@ export default function AuthScreen({ onAuthSuccess }) {
                 }
               }}
             >
-              <Text style={styles.devButtonText}>⚡ Login as Dad (Chef)</Text>
+              <Text style={styles.devButtonText}>Login as Dad (Chef)</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -194,7 +194,7 @@ export default function AuthScreen({ onAuthSuccess }) {
                 }
               }}
             >
-              <Text style={styles.devButtonText}>⚡ Login as Neighbor</Text>
+              <Text style={styles.devButtonText}>Login as Neighbor</Text>
             </TouchableOpacity>
 
           </View>

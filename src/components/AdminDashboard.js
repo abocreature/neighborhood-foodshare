@@ -169,21 +169,21 @@ export default function AdminDashboard() {
           style={[styles.subNavButton, adminView === 'manifest' && styles.activeSubNavButton]}
           onPress={() => setAdminView('manifest')}
         >
-          <Text style={[styles.subNavText, adminView === 'manifest' && styles.activeSubNavText]}>📋 Orders Manifest</Text>
+          <Text style={[styles.subNavText, adminView === 'manifest' && styles.activeSubNavText]}>Orders</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.subNavButton, adminView === 'menu' && styles.activeSubNavButton]}
           onPress={() => setAdminView('menu')}
         >
-          <Text style={[styles.subNavText, adminView === 'menu' && styles.activeSubNavText]}>🍳 Manage Meals</Text>
+          <Text style={[styles.subNavText, adminView === 'menu' && styles.activeSubNavText]}>Meals</Text>
         </TouchableOpacity>
       </View>
 
       {/* VIEW SPACE 1: Orders Manifest Workspace */}
       {adminView === 'manifest' && (
         <View style={{ flex: 1 }}>
-          <Text style={styles.sectionTitle}>Active Order Delivery Manifest</Text>
+          <Text style={styles.sectionTitle}>Current and Past Orders</Text>
           <FlatList
             data={orders}
             keyExtractor={(item) => item.id.toString()}
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
 
           {showForm && (
             <View style={styles.formCard}>
-              <Text style={styles.formTitle}>New Menu Item Configurations</Text>
+              <Text style={styles.formTitle}>New Menu Item</Text>
               {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
               {successText ? <Text style={styles.successInlineText}>{successText}</Text> : null}
               <TextInput placeholder="Dish Name" value={dishName} onChangeText={setDishName} style={styles.input} />
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Active Menu Rotations</Text>
+          <Text style={styles.sectionTitle}>Current and Past Menu</Text>
           <FlatList
             data={meals}
             keyExtractor={(item) => item.id.toString()}
