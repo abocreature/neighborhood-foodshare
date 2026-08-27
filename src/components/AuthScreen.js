@@ -143,7 +143,7 @@ export default function AuthScreen({ onAuthSuccess }) {
           <Text style={styles.buttonText}>{loading ? 'Syncing...' : isSignUp ? 'Register Account' : 'Sign In'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)} style={styles.switchButton}>
+        <TouchableOpacity onPress={toggleFormMode} style={styles.switchButton}>
           <Text style={styles.switchText}>
             {isSignUp ? 'Already have an account? Sign In' : 'New to Foodshare? Register Here'}
           </Text>
