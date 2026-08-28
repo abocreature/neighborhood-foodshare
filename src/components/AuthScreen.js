@@ -85,7 +85,7 @@ export default function AuthScreen({ onAuthSuccess }) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Neighborhood Foodshare'}</Text>
+        <Text style={styles.title}>{isSignUp ? 'Create Account' : `Welcome to Stan's Pantry`}</Text>
         
         {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
         {successText ? <Text style={styles.successInlineText}>{successText}</Text> : null}

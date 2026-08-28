@@ -60,9 +60,30 @@ export default function App() {
   }
 
   return (
-    <View style={styles.rootContainer}>
+    <View style={styles.rootContainer} documentTitle={`Stan's Pantry`}>
       <View style={styles.appMaxWidthBox}>
-        
+        <Text style={{ 
+        fontSize: 28, 
+        fontWeight: '900', 
+        color: '#1e293b', 
+        textAlign: 'center', 
+        marginBottom: 5,
+        letterSpacing: -0.5
+      }}>
+        Stan's Pantry
+      </Text>
+      
+      <Text style={{
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 20,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5
+      }}>
+        Barnardsville, NC • Local Foodshare
+      </Text>
         <View style={styles.navHeaderCard}>
           <Text style={styles.userEmailText}>
             Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text>

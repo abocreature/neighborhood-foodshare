@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "neighborhood-foodshare",
-    "slug": "neighborhood-foodshare",
+    "name": "Stan's Pantry",
+    "slug": "stans-pantry",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
