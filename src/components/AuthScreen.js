@@ -138,6 +138,13 @@ export default function AuthScreen({ onAuthSuccess }) {
             style={styles.input} 
           />
         )}
+        {isSignUp && (
+          <View style={styles.privacyNoticeCard}>
+            <Text style={styles.privacyNoticeText}>
+              <Text style={{ fontWeight: 'bold' }}>Privacy Notice:</Text> Your email is kept only for validation, and your personal information is only used for delivery coordination. We do not share your data with third parties.
+            </Text>
+          </View>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={() => handleAuth()} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Syncing...' : isSignUp ? 'Register Account' : 'Sign In'}</Text>
@@ -241,5 +248,21 @@ const styles = StyleSheet.create({
     marginTop: 10     // Provide separation margin padding
   },
   devButton: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 6, flex: 1, alignItems: 'center' },
-  devButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold' }
+  devButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+
+  privacyNoticeCard: {
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 15,
+    width: '100%'
+  },
+  privacyNoticeText: {
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 18,
+    textAlign: 'center'
+  },
 });

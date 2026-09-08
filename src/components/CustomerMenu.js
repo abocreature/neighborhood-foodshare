@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { supabase } from '../services/supabase';
 
 export default function CustomerMenu({ user }) {
@@ -9,6 +9,14 @@ export default function CustomerMenu({ user }) {
   const [processingID, setProcessingID] = useState(null);
   const [errorText, setErrorText] = useState('');
   const [activeClaims, setActiveClaims] = useState({});
+  const [successText, setSuccessText] = useState({});
+
+  const triggerSavedFlash = (mealID) => {
+    setSuccessText(prev => ({ ...prev, [mealID]: true }));
+    setTimeout(() => {
+      setSuccessText(prev => ({ ...prev, [mealID]: false }));
+    }, 1500); //1.5 seconds
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -84,6 +92,9 @@ export default function CustomerMenu({ user }) {
           ...prev,
           [mealID]: { orderID: data.id, portions: 1 }
         }));
+
+        triggerSavedFlash(mealID);
+
     } catch (err) {
       setErrorText(`Initial claim failed: ${err.message}`);
     } finally {
@@ -108,6 +119,9 @@ export default function CustomerMenu({ user }) {
         ...prev,
         [mealID]: { ...prev[mealID], portions: newAmount }
       }));
+
+        triggerSavedFlash(mealID);
+
     } catch (err) {
       setErrorText(`Portion adjustment failed: ${err.message}`);
     } finally {
@@ -133,6 +147,9 @@ export default function CustomerMenu({ user }) {
         delete updated[mealID];
         return updated;
       });
+
+        triggerSavedFlash(mealID);
+
     } catch (err) {
       setErrorText(`Order cancellation failed: ${err.message}`);
     } finally {
@@ -154,15 +171,14 @@ export default function CustomerMenu({ user }) {
 
       {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
 
-      <FlatList
-        data={meals}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => {
+      {meals.map((item) => {
           const claim = activeClaims[item.id];
           const isClaimed = !!claim;
+          const isSaved = !!successText[item.id];
 
           return (
             <TouchableOpacity 
+              key={item.id}
               activeOpacity={0.8}
               style={[styles.card, isClaimed && styles.claimedCard]}
               onPress={() => !isClaimed && handleInitialClaim(item.id)}
@@ -187,7 +203,10 @@ export default function CustomerMenu({ user }) {
               {/* Dynamic Overlay Layout: Pops up only inside claimed items */}
               {isClaimed && (
                 <View style={styles.portionsOverlay} onStartShouldSetResponder={() => true}>
-                  <Text style={styles.portionsLabel}>Your Order:</Text>
+                  <View style={styles.overlayHeaderRow}>
+                    <Text style={styles.portionsLabel}>Your Order:</Text>
+                    {isSaved && <Text style={styles.savedFlash}> • Saved!</Text>}
+                  </View>
                   <View style={styles.counterRow}>
                     <TouchableOpacity 
                       style={styles.arrowButton} 
@@ -211,14 +230,13 @@ export default function CustomerMenu({ user }) {
               )}
             </TouchableOpacity>
           );
-        }}
-      />
+        })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: '#fff', alignItems: 'center' },
+  container: { width: '100%' },
   welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
   subHeader: { fontSize: 14, color: '#666', marginBottom: 15, marginTop: 4, textAlign: 'center' },
   centered: { flex: 1, justifyContent: 'center' },
@@ -226,26 +244,33 @@ const styles = StyleSheet.create({
   errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
   
   // Basic Card Styling
-  card: { padding: 18, backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1, maxWidth: 600 },
+  container: { width: '100%' },
+  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
+  subHeader: { fontSize: 14, color: '#666', marginBottom: 20, marginTop: 4, textAlign: 'center' },
+  centered: { paddingVertical: 40, justifyContent: 'center', alignItems: 'center' },
+  
+  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+
+  card: { width: '100%', padding: 18, backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
   claimedCard: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dateText: { fontSize: 13, fontWeight: '700', color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' },
+  cardHeader: { flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 4 },
+  dateText: { fontSize: 13, fontWeight: '700', color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 },
   claimedDateText: { color: '#16a34a' },
-  
   dishName: { fontSize: 19, fontWeight: 'bold', color: '#1e293b', marginVertical: 6, textAlign: 'center' },
   description: { fontSize: 14, color: '#64748b', marginBottom: 12, lineHeight: 20, textAlign: 'center' },
   
-  // Custom Controls Overlay
-  portionsOverlay: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#dcfce7', flexDirection: 'column', alignItems: 'center' },
-  portionsLabel: { fontSize: 12, fontWeight: 'bold', color: '#15803d', textTransform: 'uppercase', marginBottom: 6 },
-  counterRow: { flexDirection: 'row', alignItems: 'center', textAlign: 'center' },
+  portionsOverlay: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#dcfce7', flexDirection: 'column', alignItems: 'center', width: '100%' },
+  overlayHeaderRow: { flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  portionsLabel: { fontSize: 12, fontWeight: 'bold', color: '#15803d', textTransform: 'uppercase' },
+  savedFlash: { fontSize: 12, fontWeight: '700', color: '#16a34a', textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  counterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%' },
   arrowButton: { width: 36, height: 36, backgroundColor: '#fff', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   arrowText: { fontSize: 18, fontWeight: 'bold', color: '#16a34a' },
   portionCount: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginHorizontal: 15, minWidth: 20, textAlign: 'center' },
   unitText: { fontSize: 14, color: '#16a34a', fontWeight: '500', marginLeft: 10 },
   disabledText: { color: '#cbd5e1' },
   
-  cancelX: { position: 'absolute', right: -50, width: 28, height: 28, backgroundColor: '#fee2e2', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  cancelXText: { fontSize: 12, fontWeight: 'bold', color: '#ef4444' }
+  cancelX: { position: 'absolute', right: 0, width: 28, height: 28, backgroundColor: '#fee2e2', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cancelXText: { fontSize: 12, fontWeight: 'bold', color: '#ef4444', marginTop: -1 },
 });

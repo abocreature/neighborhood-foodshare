@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, Button } from 'react-native';
+import { StyleSheet, ScrollView, Text, View, ActivityIndicator, Button } from 'react-native';
 import CustomerMenu from './src/components/CustomerMenu';
 import AdminDashboard from './src/components/AdminDashboard';
 import AuthScreen from './src/components/AuthScreen';
@@ -60,61 +60,96 @@ export default function App() {
   }
 
   return (
-    <View style={styles.rootContainer} documentTitle={`Stan's Pantry`}>
-      <View style={styles.appMaxWidthBox}>
-        <Text style={{ 
-        fontSize: 28, 
-        fontWeight: '900', 
-        color: '#1e293b', 
-        textAlign: 'center', 
-        marginBottom: 5,
-        letterSpacing: -0.5
-      }}>
-        Stan's Pantry
-      </Text>
-      
-      <Text style={{
-        fontSize: 13,
-        fontWeight: '500',
-        color: '#64748b',
-        textAlign: 'center',
-        marginBottom: 20,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5
-      }}>
-        Barnardsville, NC • Local Foodshare
-      </Text>
-        <View style={styles.navHeaderCard}>
-          <Text style={styles.userEmailText}>
-            Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text>
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-            {userRole === 'neighbor' && !showProfile && (
-              <Button title="My Account" onPress={() => setShowProfile(true)} color="#2563eb" />
-            )}
-            <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="#ef4444" />
+    <ScrollView 
+      contentContainerStyle={styles.rootScrollViewContainer}
+      showsVerticalScrollIndicator={true}
+      bounces={false}
+    >
+      <View style={styles.rootContainer} documentTitle={`Stan's Pantry`}>
+        <View style={styles.appMaxWidthBox}>
+          <Text style={{ 
+          fontSize: 28, 
+          fontWeight: '900', 
+          color: '#1e293b', 
+          textAlign: 'center', 
+          marginBottom: 5,
+          letterSpacing: -0.5
+        }}>
+          Stan's Pantry
+        </Text>
+        
+        <Text style={{
+          fontSize: 13,
+          fontWeight: '500',
+          color: '#64748b',
+          textAlign: 'center',
+          marginBottom: 20,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5
+        }}>
+          Barnardsville, NC • Local Foodshare
+        </Text>
+          <View style={styles.navHeaderCard}>
+            <Text style={styles.userEmailText}>
+              Logged in as: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{sessionUser.email}</Text>
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              {userRole === 'neighbor' && !showProfile && (
+                <Button title="My Account" onPress={() => setShowProfile(true)} color="#2563eb" />
+              )}
+              <Button title="Log Out" onPress={() => supabase.auth.signOut()} color="#ef4444" />
+            </View>
           </View>
-        </View>
 
-        <View style={{ flex: 1 }}>
-          {userRole === 'chef' ? (
-            <AdminDashboard user={sessionUser} />
-          ) : showProfile ? (
-            <ProfilePage user={sessionUser} onClose={() => setShowProfile(false)} />
-          ) : (
-            <CustomerMenu user={sessionUser} />
-          )}
-        </View>
+          <View style={{ flex: 1 }}>
+            {userRole === 'chef' ? (
+              <AdminDashboard user={sessionUser} />
+            ) : showProfile ? (
+              <ProfilePage user={sessionUser} onClose={() => setShowProfile(false)} />
+            ) : (
+              <CustomerMenu user={sessionUser} />
+            )}
+          </View>
 
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  rootContainer: { flex: 1, backgroundColor: '#f8fafc', alignItems: 'center', paddingTop: 40 },
-  appMaxWidthBox: { width: '100%', maxWidth: 600, flex: 1, paddingHorizontal: 15 },
-  navHeaderCard: { backgroundColor: '#fff', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  userEmailText: { fontSize: 13, color: '#64748b' },
+  rootScrollViewContainer: { 
+    flexGrow: 1, 
+    backgroundColor: '#f8fafc', 
+    alignItems: 'center', 
+    paddingTop: 30,
+    paddingBottom: 40,
+    width: '100%',
+    overflowX: 'hidden'
+  },
+  appMaxWidthBox: { 
+    width: '100%', 
+    maxWidth: 500,
+    paddingHorizontal: 16,
+    alignItems: 'center'
+  },
+  brandTitle: { fontSize: 28, fontWeight: '900', color: '#1e293b', textAlign: 'center', marginBottom: 4, letterSpacing: -0.5 },
+  brandSubtitle: { fontSize: 12, fontWeight: '600', color: '#64748b', textAlign: 'center', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 0.5 },
+  
+  navHeaderCard: { 
+    backgroundColor: '#fff', 
+    padding: 16, 
+    borderRadius: 12, 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0', 
+    width: '100%', 
+    alignItems: 'center', 
+    marginBottom: 20,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  userEmailText: { fontSize: 13, color: '#64748b', marginBottom: 12, textAlign: 'center', width: '100%' },
+  buttonRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', flexWrap: 'wrap' },
+  
+  viewContentWrapper: { width: '100%' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' }
 });
