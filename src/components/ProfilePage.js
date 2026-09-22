@@ -44,7 +44,7 @@ export default function ProfilePage({ user, onClose }) {
     setSuccessText('');
 
     if (!fullName || !address || !phone) {
-      setErrorText('All profiling data fields are strictly required.');
+      setErrorText('All profile data fields are strictly required.');
       return;
     }
 
@@ -60,7 +60,7 @@ export default function ProfilePage({ user, onClose }) {
         .eq('id', user.id);
 
       if (error) throw error;
-      setSuccessText('Your account delivery settings updated perfectly!');
+      setSuccessText('Your account details successfully updated!');
     } catch (err) {
       setErrorText(err.message);
     } finally {
@@ -72,9 +72,8 @@ export default function ProfilePage({ user, onClose }) {
 
   return (
     <View style={styles.container}>
-      <div style={{ width: '100%', maxWidth: '500px', backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: 400, padding: '20px' }}>
         
-        {/* Header containing centered title and absolute-positioned Close X button */}
         <View style={styles.cardHeader}>
           <Text style={styles.header}>My Account Details</Text>
           <TouchableOpacity style={styles.cancelX} onPress={onClose}>
@@ -110,22 +109,117 @@ export default function ProfilePage({ user, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 5, alignItems: 'center' },
-  cardHeader: { flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 15 },
-  header: { fontSize: 20, fontWeight: 'bold', color: '#1e293b', textAlign: 'center' },
-  subHeader: { fontSize: 13, color: '#64748b', marginBottom: 20, marginTop: 4, textAlign: 'center' },
+  container: { 
+    flex: 1, 
+    padding: 5, 
+    alignItems: 'center' 
+  },
+  cardHeader: { 
+    flexDirection: 'row', 
+    width: '100%', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    position: 'relative', 
+    marginBottom: 15 
+  },
+  header: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#fef2f2',  
+    textAlign: 'center' 
+  },
+  subHeader: { 
+    fontSize: 13, 
+    color: '#cbd5e1', 
+    marginBottom: 20, 
+    marginTop: 4, 
+    textAlign: 'center' 
+  },
   
-  cancelX: { position: 'absolute', right: 0, width: 28, height: 28, backgroundColor: '#fee2e2', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  cancelXText: { fontSize: 12, fontWeight: 'bold', color: '#ef4444', marginTop: -1 },
+  cancelX: { 
+    position: 'absolute', 
+    right: -40, 
+    width: 28, 
+    height: 28, 
+    backgroundColor: '#fee2e2', 
+    borderRadius: 14, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  cancelXText: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    color: '#ef4444', 
+    marginTop: -1 
+  },
 
-  fieldBox: { width: '100%', flexDirection: 'column', marginTop: 15 },
-  inputLabel: { fontSize: 12, fontWeight: '600', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', padding: 12, borderRadius: 6, fontSize: 15, backgroundColor: '#fff', width: '100%', boxSizing: 'border-box' },
+  fieldBox: { 
+    width: '100%', 
+    flexDirection: 'column', 
+    marginTop: 15 
+  },
+  inputLabel: { 
+    fontSize: 12, 
+    fontWeight: '600', 
+    color: '#cbd5e1', 
+    marginBottom: 6, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5 
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#cbd5e1', 
+    padding: 12, 
+    borderRadius: 6, 
+    fontSize: 15, 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+    width: '100%', 
+    boxSizing: 'border-box',
+    color: '#cbd5e1', 
+  },
   
-  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
-  successInlineText: { color: '#16a34a', backgroundColor: '#f0fdf4', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#16a34a', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+  errorInlineText: { 
+    color: '#ef4444', 
+    backgroundColor: '#fef2f2', 
+    padding: 10, 
+    borderRadius: 6, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#ef4444', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%', 
+    textAlign: 'center' 
+  },
+  successInlineText: { 
+    color: '#16a34a', 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',  
+    padding: 10, 
+    borderRadius: 6, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#16a34a', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%', 
+    textAlign: 'center' 
+  },
   
-  saveButton: { backgroundColor: '#16a34a', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 10 },
-  saveButtonText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' }
+  saveButton: { 
+    backgroundColor: '#f97316', 
+    padding: 14, 
+    borderRadius: 6, 
+    alignItems: 'center', 
+    marginTop: 10 
+  },
+  saveButtonText: { 
+    color: '#fff', 
+    fontSize: 15, 
+    fontWeight: 'bold' 
+  },
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  }
 });

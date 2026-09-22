@@ -98,14 +98,12 @@ export default function AuthScreen({ onAuthSuccess }) {
               onChangeText={setFullName} 
               style={styles.input} 
             />
-            {/* NEW ADDITION: ADDRESS INPUT BOX */}
             <TextInput 
               placeholder="Delivery Address (e.g., 123 Maple St)" 
               value={address} 
               onChangeText={setAddress} 
               style={styles.input} 
             />
-            {/* NEW ADDITION: PHONE NUMBER INPUT BOX */}
             <TextInput 
               placeholder="Phone Number (e.g., 828-555-0199)" 
               value={phone} 
@@ -163,7 +161,7 @@ export default function AuthScreen({ onAuthSuccess }) {
           <View style={styles.devRow}>
             
             <TouchableOpacity 
-              style={[styles.devButton, { backgroundColor: '#2563eb' }]} 
+              style={[styles.devButton, { backgroundColor: '#f97316' }]} 
               onPress={async () => {
                 setLoading(true);
                 try {
@@ -212,43 +210,131 @@ export default function AuthScreen({ onAuthSuccess }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 15, backgroundColor: '#f8fafc', minHeight: '100vh' },
-  card: { width: '100%', maxWidth: 400, backgroundColor: '#fff', padding: 25, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#1e293b' },
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 15, 
+    minHeight: '100vh' 
+  },
+  card: { 
+    width: '100%', 
+    maxWidth: 400,
+    backgroundColor: 'rgba(19, 13, 8, 0.81)',
+    padding: 25,
+    borderRadius: 12, 
+    marginBottom: 15, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255, 255, 255, 0.05)', 
+    alignItems: 'center'
+  },
+  title: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    marginBottom: 20, 
+    textAlign: 'center', 
+    color: '#fef2f2', 
+  },
 
-  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderHorizontalWidth: 1, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%' },
-  successInlineText: { color: '#16a34a', backgroundColor: '#f0fdf4', padding: 10, borderRadius: 6, borderHorizontalWidth: 1, borderLeftWidth: 4, borderLeftColor: '#16a34a', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%' },
+  errorInlineText: { 
+    color: '#ef4444', 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',  
+    padding: 10, 
+    borderRadius: 6, 
+    borderHorizontalWidth: 1, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#ef4444', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%' 
+  },
+  successInlineText: { 
+    color: '#16a34a', 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',  
+    padding: 10, 
+    borderRadius: 6, 
+    borderHorizontalWidth: 1, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#16a34a', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%' 
+  },
   
-  input: { borderWidth: 1, borderColor: '#cbd5e1', padding: 12, borderRadius: 6, marginBottom: 15, fontSize: 15, backgroundColor: '#fff' },
-  button: { backgroundColor: '#2563eb', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 5 },
-  buttonText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
-  switchButton: { marginTop: 15, alignItems: 'center' },
-  switchText: { color: '#2563eb', fontSize: 14, fontWeight: '500' },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#cbd5e1', 
+    padding: 12, 
+    borderRadius: 6, 
+    marginBottom: 15, 
+    fontSize: 15, 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+    color: '#cbd5e1', 
+  },
+  button: { 
+    backgroundColor: '#f97316', 
+    padding: 14, 
+    borderRadius: 6, 
+    alignItems: 'center', 
+    marginTop: 5 
+  },
+  buttonText: { 
+    color: '#fff', 
+    fontSize: 15, 
+    fontWeight: 'bold' 
+  },
+  switchButton: { 
+    marginTop: 15, 
+    alignItems: 'center' 
+  },
+  switchText: { 
+    color: '#f97316', 
+    fontSize: 14, 
+    fontWeight: '500' 
+  },
   
   devPanel: { 
     width: '100%', 
     maxWidth: 400, 
     marginTop: 25, 
     padding: 15, 
-    backgroundColor: '#f1f5f9', 
+    backgroundColor: 'rgba(19, 13, 8, 0.81)',
     borderRadius: 10, 
     borderWidth: 1, 
     borderColor: '#cbd5e1', 
     borderStyle: 'dashed', 
     alignItems: 'center',
-    zIndex: 999,      // <-- Forces the dev bypass module to render on TOP of background components
-    elevation: 5      // <-- Force android layout stacking order layer separation
+    zIndex: 999,  
+    elevation: 5  
   },
-  devTitle: { fontSize: 10, fontWeight: 'bold', color: '#475569', letterSpacing: 0.5, marginBottom: 10 },
-    devRow: { 
+  devTitle: { 
+    fontSize: 10, 
+    fontWeight: 'bold', 
+    color: '#cbd5e1', 
+    letterSpacing: 0.5, 
+    marginBottom: 10 
+  },
+  devRow: { 
     flexDirection: 'row', 
     gap: 10, 
     width: '100%', 
     justifyContent: 'center',
-    marginTop: 10     // Provide separation margin padding
+    marginTop: 10  
   },
-  devButton: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 6, flex: 1, alignItems: 'center' },
-  devButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  devButton: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 12, 
+    borderRadius: 6, 
+    flex: 1, 
+    alignItems: 'center' 
+  },
+  devButtonText: { 
+    color: '#fff', 
+    fontSize: 12, 
+    fontWeight: 'bold' 
+  },
 
   privacyNoticeCard: {
     backgroundColor: '#f8fafc',

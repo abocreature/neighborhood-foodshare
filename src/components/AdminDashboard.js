@@ -80,7 +80,7 @@ export default function AdminDashboard() {
             dish_name: dishName,
             description: description,
             serving_date: servingDate,
-            chef_id: (await supabase.auth.getUser()).data.user?.id // Dynamically links your dad's auth account ID
+            chef_id: (await supabase.auth.getUser()).data.user?.id
           }
         ]).select('*');
 
@@ -117,7 +117,6 @@ export default function AdminDashboard() {
 
       if (error) throw error;
 
-      // Pessimistic Client Update: Update local view array match instantly
       setOrders(prevOrders => 
         prevOrders.map(order => 
           order.id === orderId ? { ...order, status: nextStatus } : order
@@ -161,7 +160,6 @@ export default function AdminDashboard() {
     <View style={styles.container}>
       {errorText ? <Text style={styles.errorInlineText}>{errorText}</Text> : null}
       
-      {/* Sub-Navigation Bar for your Dad */}
       <View style={styles.subNavBar}>
         <TouchableOpacity 
           style={[styles.subNavButton, adminView === 'manifest' && styles.activeSubNavButton]}
@@ -178,7 +176,6 @@ export default function AdminDashboard() {
         </TouchableOpacity>
       </View>
 
-      {/* VIEW SPACE 1: Orders Manifest Workspace */}
       {adminView === 'manifest' && (
         <View style={{ flex: 1 }}>
           <Text style={styles.sectionTitle}>Current and Past Orders</Text>
@@ -210,7 +207,6 @@ export default function AdminDashboard() {
         </View>
       )}
 
-      {/* VIEW SPACE 2: Menu Rotation & Creation Manager Workspace */}
       {adminView === 'menu' && (
         <View style={{ flex: 1 }}>
           <TouchableOpacity style={[styles.toggleButton, showForm && styles.cancelToggleButton]} onPress={toggleFormView}>
@@ -226,7 +222,7 @@ export default function AdminDashboard() {
               <TextInput placeholder="Description" value={description} onChangeText={setDescription} multiline style={[styles.input, styles.textArea]} />
               <View style={styles.datePickerContainer}>
                 <Text style={styles.inputLabel}>Serving Date:</Text>
-                <input type="date" value={servingDate} onChange={(e) => setServingDate(e.target.value)} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', fontSize: '15px', fontFamily: 'sans-serif', marginBottom: '12px', backgroundColor: '#fff', width: '100%', boxSizing: 'border-box' }} />
+                <input type="date" value={servingDate} onChange={(e) => setServingDate(e.target.value)} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', fontSize: '15px', fontFamily: 'sans-serif', marginBottom: '12px', backgroundColor: 'rgba(255, 255, 255, 0.05)', width: '100%', boxSizing: 'border-box', color: '#cbd5e1',  }} />
               </View>
               <TouchableOpacity style={styles.submitButton} onPress={handleCreateMeal} disabled={submitting}>
                 <Text style={styles.submitButtonText}>{submitting ? 'Publishing...' : 'Publish to Menu'}</Text>
@@ -258,54 +254,261 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: '#f8fafc' },
-  header: { fontSize: 22, fontWeight: 'bold', color: '#222', textAlign: 'center' },
-  subHeader: { fontSize: 13, color: '#666', marginBottom: 15, marginTop: 2, textAlign: 'center' },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, marginTop: 10 },
+  container: { 
+    flex: 1, 
+    padding: 15, 
+    backgroundColor: 'rgba(255,255,255,0.08)', 
+  },
+  header: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    color: '#222', 
+    textAlign: 'center' 
+  },
+  subHeader: { 
+    fontSize: 13, 
+    color: '#cbd5e1', 
+    marginBottom: 15, 
+    marginTop: 2, 
+    textAlign: 'center' 
+  },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#cbd5e1', 
+    marginBottom: 10, 
+    marginTop: 10 
+  },
 
-  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
-  successInlineText: { color: '#16a34a', backgroundColor: '#f0fdf4', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#16a34a', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+  errorInlineText: { 
+    color: '#ef4444', 
+    backgroundColor: '#fef2f2', 
+    padding: 10, 
+    borderRadius: 6, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#ef4444', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%', 
+    textAlign: 'center' 
+  },
+  successInlineText: { 
+    color: '#16a34a',
+    backgroundColor: '#f0fdf4', 
+    padding: 10, 
+    borderRadius: 6, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#16a34a', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%', 
+    textAlign: 'center' 
+  },
 
-  subNavBar: { flexDirection: 'row', backgroundColor: '#e2e8f0', borderRadius: 8, padding: 4, marginBottom: 20 },
-  subNavButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },
-  activeSubNavButton: { backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  subNavText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
-  activeSubNavText: { color: '#1e293b' },
+  subNavBar: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(94, 86, 80, 0.5)', 
+    borderRadius: 8, 
+    padding: 4, 
+    marginBottom: 20 
+  },
+  subNavButton: { 
+    flex: 1, 
+    paddingVertical: 10, 
+    alignItems: 'center', 
+    borderRadius: 6 
+  },
+  activeSubNavButton: { 
+    backgroundColor: '#f97316'
+  },
+  subNavText: { 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: '#cbd5e1', 
+  },
+  activeSubNavText: { 
+    color: '#fef2f2'
+  },
   
-  toggleButton: { backgroundColor: '#2563eb', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
-  cancelToggleButton: { backgroundColor: '#64748b' },
-  toggleButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  toggleButton: { 
+    backgroundColor: '#f97316', 
+    padding: 12, 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
+  cancelToggleButton: { 
+    backgroundColor: '#64748b' 
+  },
+  toggleButtonText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 15 
+  },
   
-  formCard: { backgroundColor: '#fff', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 25 },
-  formTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, padding: 10, fontSize: 15, marginBottom: 12, backgroundColor: '#fff' },
-  textArea: { height: 60, textAlignVertical: 'top' },
-  submitButton: { backgroundColor: '#16a34a', padding: 12, borderRadius: 6, alignItems: 'center', marginTop: 5 },
-  submitButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-  datePickerContainer: { width: '100%', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  formCard: { 
+    padding: 15, 
+    marginBottom: 25 
+  },
+  formTitle: { 
+    fontSize: 15, 
+    fontWeight: 'bold', 
+    color: '#fef2f2', 
+    marginBottom: 12, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5 
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#cbd5e1', 
+    borderRadius: 6, 
+    padding: 10, 
+    fontSize: 15, 
+    marginBottom: 12, 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: '#cbd5e1'
+  },
+  textArea: { 
+    height: 60, 
+    textAlignVertical: 'top' 
+  },
+  submitButton: { 
+    backgroundColor: '#f97316', 
+    padding: 12, 
+    borderRadius: 6, 
+    alignItems: 'center', 
+    marginTop: 5 
+  },
+  submitButtonText: { 
+    color: '#fef2f2',  
+    fontWeight: 'bold', 
+    fontSize: 15 
+  },
+  datePickerContainer: { 
+    width: '100%', 
+    flexDirection: 'column', 
+    alignItems: 'flex-start', 
+    marginBottom: 4
+  },
+  inputLabel: { 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: '#cbd5e1',
+    marginBottom: 6, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5 
+  },
 
-  // New Menu Item Card Management Component Layout Styles
-  menuManagementCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8 },
-  menuDateText: { fontSize: 11, fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase' },
-  menuDishName: { fontSize: 15, fontWeight: '600', color: '#1e293b', marginTop: 2 },
-  deleteButton: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
-  deleteButtonText: { fontSize: 11, fontWeight: 'bold', color: '#ef4444', marginTop: -1 },
+  menuManagementCard: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingVertical: 8, 
+    paddingHorizontal: 12, 
+    backgroundColor: 'rgba(94, 86, 80, 0.5)',
+    borderColor: '#e2e8f0', 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    marginBottom: 8 
+  },
+  menuDateText: { 
+    fontSize: 11, 
+    fontWeight: 'bold', 
+    color: '#f97316', 
+    textTransform: 'uppercase' 
+  },
+  menuDishName: { 
+    fontSize: 15, 
+    fontWeight: '600', 
+    color: '#e2e8f0', 
+    marginTop: 2 
+  },
+  deleteButton: { 
+    width: 26, 
+    height: 26, 
+    borderRadius: 13, 
+    backgroundColor: '#fee2e2', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  deleteButtonText: { 
+    fontSize: 11, 
+    fontWeight: 'bold', 
+    color: '#ef4444', 
+    marginTop: -1 
+  },
 
-  // Manifest Card Structure (Side-by-Side Flex Split Row)
-  manifestCard: { flexDirection: 'row', padding: 15, backgroundColor: '#fff', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'space-between' },
-  confirmedManifestCard: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  cardInfoSplit: { flex: 1, paddingRight: 10 },
+  manifestCard: { 
+    flexDirection: 'row', 
+    padding: 15, 
+    backgroundColor: 'rgba(94, 86, 80, 0.5)',
+    borderRadius: 12, 
+    marginBottom: 12, 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0', 
+    alignItems: 'center', 
+    justifyContent: 'space-between' 
+  },
+  confirmedManifestCard: { 
+    backgroundColor: 'rgba(234, 88, 12, 0.15)',
+    borderColor: '#f97316'
+  },
+  cardInfoSplit: { 
+    flex: 1, 
+    paddingRight: 10 
+  },
 
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  boldText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, fontSize: 11, fontWeight: 'bold' },
-  detailsText: { fontSize: 14, color: '#555', marginTop: 2 },
-  centered: { flex: 1, justifyContent: 'center' },
+  row: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 6 
+  },
+  boldText: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#f8fafc',  
+  },
+  statusBadge: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 2, 
+    borderRadius: 12, 
+    fontSize: 11, 
+    fontWeight: 'bold' 
+  },
+  detailsText: { 
+    fontSize: 14, 
+    color: '#cbd5e1', 
+    marginTop: 2 
+  },
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center' 
+  },
 
-  // Check Mark Action Button Styles
-  checkButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  confirmedCheckButton: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-  checkText: { fontSize: 18, fontWeight: 'bold', color: '#cbd5e1', marginTop: -2 },
-  confirmedCheckText: { color: '#fff' }
+  checkButton: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    borderWidth: 2, 
+    borderColor: '#cbd5e1', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: '#fff' 
+  },
+  confirmedCheckButton: { 
+    backgroundColor: '#16a34a', 
+    borderColor: '#16a34a' 
+  },
+  checkText: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#cbd5e1', 
+    marginTop: -2 
+  },
+  confirmedCheckText: { 
+    color: '#fff' 
+  }
 });

@@ -200,12 +200,11 @@ export default function CustomerMenu({ user }) {
               <Text style={styles.dishName}>{item.dish_name}</Text>
               <Text style={styles.description}>{item.description}</Text>
 
-              {/* Dynamic Overlay Layout: Pops up only inside claimed items */}
               {isClaimed && (
                 <View style={styles.portionsOverlay} onStartShouldSetResponder={() => true}>
                   <View style={styles.overlayHeaderRow}>
                     <Text style={styles.portionsLabel}>Your Order:</Text>
-                    {isSaved && <Text style={styles.savedFlash}> • Saved!</Text>}
+                    {isSaved && <Text style={styles.savedFlash}>Saved!</Text>}
                   </View>
                   <View style={styles.counterRow}>
                     <TouchableOpacity 
@@ -236,41 +235,169 @@ export default function CustomerMenu({ user }) {
 }
 
 const styles = StyleSheet.create({
-  container: { width: '100%' },
-  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
-  subHeader: { fontSize: 14, color: '#666', marginBottom: 15, marginTop: 4, textAlign: 'center' },
-  centered: { flex: 1, justifyContent: 'center' },
+  container: { 
+    width: '100%' 
+  },
+  welcomeText: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#fef2f2', 
+    textAlign: 'center' 
+  },
+  subHeader: { 
+    fontSize: 14, 
+    color: '#b8c8df', 
+    marginBottom: 20, 
+    marginTop: 4, 
+    textAlign: 'center' 
+  },
+  centered: { 
+    paddingVertical: 40, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  
+  errorInlineText: { 
+    color: '#ef4444', 
+    backgroundColor: '#fef2f2', 
+    padding: 10, 
+    borderRadius: 6, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#ef4444', 
+    fontSize: 14, 
+    fontWeight: '500', 
+    marginBottom: 15, 
+    width: '100%', 
+    textAlign: 'center' 
+  },
 
-  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
+  card: { 
+    width: '100%', 
+    padding: 18, 
+    backgroundColor: 'rgba(94, 86, 80, 0.5)',
+    borderRadius: 12, 
+    marginBottom: 15, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255, 255, 255, 0.05)', 
+    alignItems: 'center'
+  },
+  claimedCard: { 
+    backgroundColor: 'rgba(234, 88, 12, 0.15)',
+    borderColor: '#f97316'
+  },
+  cardHeader: { 
+    flexDirection: 'row', 
+    width: '100%', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    position: 'relative', 
+    marginBottom: 4 
+  },
+  dateText: { 
+    fontSize: 13, 
+    fontWeight: '700', 
+    color: '#ff7849', 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5 
+  },
+  claimedDateText: { 
+    color: '#ff7849' 
+  },
+  dishName: { 
+    fontSize: 19, 
+    fontWeight: 'bold', 
+    color: '#f8fafc', 
+    marginVertical: 6, 
+    textAlign: 'center' 
+  },
+  description: { 
+    fontSize: 14, 
+    color: '#cbd5e1', 
+    marginBottom: 12, 
+    lineHeight: 20, 
+    textAlign: 'center' 
+  },
   
-  // Basic Card Styling
-  container: { width: '100%' },
-  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#111', textAlign: 'center' },
-  subHeader: { fontSize: 14, color: '#666', marginBottom: 20, marginTop: 4, textAlign: 'center' },
-  centered: { paddingVertical: 40, justifyContent: 'center', alignItems: 'center' },
+  portionsOverlay: { 
+    marginTop: 12, 
+    paddingTop: 12, 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.08)', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    width: '100%' 
+  },
+  portionsLabel: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    color: '#f97316', 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5 
+  },
+  savedFlash: { 
+    fontSize: 12, 
+    fontWeight: '400', 
+    color: '#f97316', 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5,
+    position: 'absolute',
+    right: -50,
+    top: 0
+  },
   
-  errorInlineText: { color: '#ef4444', backgroundColor: '#fef2f2', padding: 10, borderRadius: 6, borderLeftWidth: 4, borderLeftColor: '#ef4444', fontSize: 14, fontWeight: '500', marginBottom: 15, width: '100%', textAlign: 'center' },
-
-  card: { width: '100%', padding: 18, backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
-  claimedCard: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  cardHeader: { flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 4 },
-  dateText: { fontSize: 13, fontWeight: '700', color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 },
-  claimedDateText: { color: '#16a34a' },
-  dishName: { fontSize: 19, fontWeight: 'bold', color: '#1e293b', marginVertical: 6, textAlign: 'center' },
-  description: { fontSize: 14, color: '#64748b', marginBottom: 12, lineHeight: 20, textAlign: 'center' },
+  counterRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    width: '100%' 
+  },
+  arrowButton: { 
+    width: 36, 
+    height: 36, 
+    backgroundColor: '#1e293b', 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.15)', 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  arrowText: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#f97316' 
+  },
+  portionCount: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#f8fafc', 
+    marginHorizontal: 15, 
+    minWidth: 20, 
+    textAlign: 'center' 
+  },
+  unitText: { 
+    fontSize: 14, 
+    color: '#cbd5e1', 
+    fontWeight: '500', 
+    marginLeft: 10 
+  },
+  disabledText: { 
+    color: '#475569' 
+  },
   
-  portionsOverlay: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#dcfce7', flexDirection: 'column', alignItems: 'center', width: '100%' },
-  overlayHeaderRow: { flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
-  portionsLabel: { fontSize: 12, fontWeight: 'bold', color: '#15803d', textTransform: 'uppercase' },
-  savedFlash: { fontSize: 12, fontWeight: '700', color: '#16a34a', textTransform: 'uppercase', letterSpacing: 0.5 },
-
-  counterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%' },
-  arrowButton: { width: 36, height: 36, backgroundColor: '#fff', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  arrowText: { fontSize: 18, fontWeight: 'bold', color: '#16a34a' },
-  portionCount: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginHorizontal: 15, minWidth: 20, textAlign: 'center' },
-  unitText: { fontSize: 14, color: '#16a34a', fontWeight: '500', marginLeft: 10 },
-  disabledText: { color: '#cbd5e1' },
-  
-  cancelX: { position: 'absolute', right: 0, width: 28, height: 28, backgroundColor: '#fee2e2', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  cancelXText: { fontSize: 12, fontWeight: 'bold', color: '#ef4444', marginTop: -1 },
+  cancelX: { 
+    position: 'absolute', 
+    right: 0, 
+    width: 28, 
+    height: 28, 
+    backgroundColor: '#fee2e2', 
+    borderRadius: 14, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  cancelXText: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    color: '#ef4444', 
+    marginTop: -1 
+  },
 });
